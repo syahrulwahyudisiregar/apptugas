@@ -2404,7 +2404,7 @@ async function ujianKirimOtomatis(alasan) {
 async function ujianPelanggaran(sebab) {
   if (!UJ.aktif || UJ.kirim || UJ.dlg) return;
   var t = Date.now(); if (t - UJ.last < 2000) return; UJ.last = t;
-  var r = await api('ujianPelanggaran', {});
+  var r = await api('ujianPelanggaran', { jenis: sebab });
   if (!(r && r.ok) || r.dobel) return;
   UJ.plg = r.jumlah; ujianGambar();
   if (r.kirim) { ujianKirimOtomatis('pelanggaran'); return; }
@@ -2456,6 +2456,28 @@ function gambarUjianTampil() {
   };
   $('gn-bukaulang').onclick = async function () {
     if (await bukaUlangUjian(GN.id, $('gn-nama').textContent)) { GN.dirty = false; go('guruTugas'); }
+  };
+})();
+
+// ===== Layar PID: tombol guru untuk menampilkan nama pelanggar =====
+var PID_TAMPIL = false;
+function gambarPid() {
+  var b = $('gd-pid'); if (!b) return;
+  b.parentElement.style.display = $('gd-materi').value === 'ujian' ? '' : 'none';
+  b.textContent = PID_TAMPIL ? '🖥️ Layar PID: nama pelanggar TAMPIL (tekan untuk sembunyikan)' : '🖥️ Layar PID: nama pelanggar DISEMBUNYIKAN (tekan untuk tampilkan)';
+}
+(function () {
+  var asliBukaKode = PAGES.guruKode.buka;
+  PAGES.guruKode.buka = function () {
+    asliBukaKode();
+    api('guruPidTampil', {}).then(function (r) { if (r && r.ok) { PID_TAMPIL = r.tampil; gambarPid(); } });
+  };
+  if ($('gd-materi')) $('gd-materi').addEventListener('change', gambarPid);
+  if (!$('gd-pid')) return;   // halaman tanpa tombol PID
+  $('gd-pid').onclick = async function () {
+    var r = await api('guruPidTampil', { tampil: !PID_TAMPIL });
+    if (r && r.ok) { PID_TAMPIL = r.tampil; gambarPid(); toast(r.tampil ? 'Nama tampil di layar PID' : 'Nama disembunyikan dari layar PID'); }
+    else toast((r && r.pesan) || 'Gagal mengubah');
   };
 })();
 

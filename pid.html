@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layar PID - Keluar Layar Ujian</title>
+<style>
+body{margin:0;padding-bottom:110px !important;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#0f172a;color:#fff;min-height:100vh;padding:24px;box-sizing:border-box}
+h1{text-align:center;font-size:30px;margin:0 0 20px}
+.baris{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#1e293b;border-radius:14px;padding:16px 22px;margin:10px auto;max-width:960px;font-size:24px}
+.nama small{display:block;font-size:16px;color:#94a3b8;margin-top:2px}
+.jml{color:#fbbf24;font-weight:800;white-space:nowrap}
+.pesan{text-align:center;font-size:22px;color:#94a3b8;margin-top:60px}
+.kata{position:fixed;left:0;right:0;bottom:0;padding:22px 24px;background:#1e3a8a;text-align:center;font-size:26px;font-weight:700;line-height:1.35;transition:opacity .6s}
+.kata.hilang{opacity:0}
+</style>
+</head>
+<body>
+<h1>Keluar Layar Ujian</h1>
+<div id="isi" class="pesan">Memuat...</div>
+<div id="kata" class="kata"></div>
+<script>
+var API_URL = 'https://script.google.com/macros/s/AKfycbwI0ZmnStm9K8N5d54A6ZdctFu9hcX2v2G_k3XRIO_7tWkS5kaHjM95Z-u3igTRd4QrgA/exec';
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function muat() {
+  var el = document.getElementById('isi');
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ aksi: 'pidPelanggaran' })
+  }).then(function (r) { return r.json(); }).then(function (r) {
+    if (!r || !r.ok) el.textContent = 'Belum ada data.';
+    else if (!r.aktif) el.textContent = 'Ujian belum berjalan.';
+    else if (!r.daftar.length) el.textContent = 'Belum ada keluar layar.';
+    else el.innerHTML = r.daftar.map(function (x) {
+      return '<div class="baris"><span class="nama">' + esc(x.nama) + '<small>' + esc(x.kelas) + '</small></span><span class="jml">' + x.jumlah + ' kali</span></div>';
+    }).join('');
+  }).catch(function () { el.textContent = 'Tidak ada sinyal. Mencoba lagi...'; })
+    .then(function () { setTimeout(muat, 3000); });
+}
+// Kata-kata yang berganti setiap beberapa detik
+var KATA = [
+  'Kejujuranmu adalah nilai yang sebenarnya.',
+  'Kerjakan dengan kemampuanmu sendiri. Dari situ kamu berkembang.',
+  'Ujian mengukur apa yang sudah kamu pelajari, bukan siapa yang paling cepat menyontek.',
+  'Tenang. Kerjakan satu soal dulu, waktumu cukup.',
+  'Nilai yang jujur lebih berharga daripada nilai yang tinggi.',
+  'Belum mengerti? Tanyakan pada gurumu, jangan menebak.',
+  'Keluar layar bisa terjadi tanpa sengaja. Tetap fokus, kembali ke soalmu.',
+  'Jujur hari ini, percaya diri besok.'
+];
+var kataIdx = Math.floor(Math.random() * KATA.length);
+function gantiKata() {
+  var el = document.getElementById('kata');
+  el.classList.add('hilang');
+  setTimeout(function () {
+    kataIdx = (kataIdx + 1) % KATA.length;
+    el.textContent = KATA[kataIdx];
+    el.classList.remove('hilang');
+  }, 600);
+}
+document.getElementById('kata').textContent = KATA[kataIdx];
+setInterval(gantiKata, 8000);
+
+muat();
+</script>
+</body>
+</html>
