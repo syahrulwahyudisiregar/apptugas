@@ -443,7 +443,7 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
 <div id="toast"></div>
 
 <!-- ===================== BANK SOAL (tempel isi file apa adanya) ===================== -->
-<script>window.MODE = 'portal';</script>
+<script>window.MODE = /ujian/i.test(location.search) ? 'ujian' : 'portal';</script>
 <script src="app.js?v=Reg03"></script>
 </body>
 </html>
