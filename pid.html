@@ -30,7 +30,7 @@ function muat() {
     body: JSON.stringify({ aksi: 'pidPelanggaran' })
   }).then(function (r) { return r.json(); }).then(function (r) {
     if (!r || !r.ok) el.textContent = 'Belum ada data.';
-    else if (!r.aktif) el.textContent = 'Ujian belum berjalan.';
+    else if (!r.aktif) el.textContent = r.alasan === 'pid' ? 'Guru belum menyalakan tampilan nama.' : 'Ujian belum dibuka guru.';
     else if (!r.daftar.length) el.textContent = 'Belum ada keluar layar.';
     else el.innerHTML = r.daftar.map(function (x) {
       return '<div class="baris"><span class="nama">' + esc(x.nama) + '<small>' + esc(x.kelas) + '</small></span><span class="jml">' + x.jumlah + ' kali</span></div>';
