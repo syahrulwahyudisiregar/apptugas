@@ -2474,6 +2474,11 @@ function gambarPid() {
   };
   if ($('gd-materi')) $('gd-materi').addEventListener('change', gambarPid);
   if (!$('gd-pid')) return;   // halaman tanpa tombol PID
+  if ($('gd-pidreset')) $('gd-pidreset').onclick = async function () {
+    if (!(await tanya('Reset daftar pelanggaran?', 'Layar PID akan kosong. Data pelanggaran tetap tersimpan di tab Pelanggaran Ujian.', 'Reset', 'Batal'))) return;
+    var r = await api('guruPidReset', {});
+    toast(r && r.ok ? 'Daftar pelanggaran direset' : ((r && r.pesan) || 'Gagal mereset'));
+  };
   $('gd-pid').onclick = async function () {
     var r = await api('guruPidTampil', { tampil: !PID_TAMPIL });
     if (r && r.ok) { PID_TAMPIL = r.tampil; gambarPid(); toast(r.tampil ? 'Nama tampil di layar PID' : 'Nama disembunyikan dari layar PID'); }
