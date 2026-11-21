@@ -178,15 +178,24 @@ details summary{cursor:pointer;font-weight:600;color:var(--utama);padding:6px 0}
 .persen{font-size:36px;font-weight:800;color:var(--utama);text-align:center}
 .stempel{display:inline-block;border:6px solid var(--hijau);color:var(--hijau);font-size:34px;font-weight:900;padding:8px 22px;border-radius:12px;letter-spacing:4px;transform:rotate(-12deg);animation:cap .8s ease-out}
 @keyframes cap{0%{transform:scale(4) rotate(-25deg);opacity:0}55%{transform:scale(.9) rotate(-12deg);opacity:1}70%{transform:scale(1.06) rotate(-15deg)}80%{transform:scale(1) rotate(-9deg)}90%{transform:scale(1) rotate(-14deg)}100%{transform:scale(1) rotate(-12deg)}}
+.ring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.ring-grid .ring-item{flex-direction:column;align-items:flex-start;gap:3px;padding:9px 10px;font-size:13px;background:#fff;border:1.5px solid var(--garis);border-radius:12px}
+.ring-grid .ring-item:last-child{border-bottom:1.5px solid var(--garis)}
+.bar-kirim{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;box-shadow:0 -4px 14px rgba(15,23,42,.12);padding-bottom:env(safe-area-inset-bottom)}
+.bar-kirim .in{max-width:480px;margin:0 auto;padding:10px 16px;display:flex;gap:10px}
+.bar-kirim .btn{margin-top:0;flex:1;min-height:52px}
+.bar-kirim #sx-kirim{flex:1.4;font-size:18px}
 </style>
 <div id="h-selesai" class="halaman">
-  <div class="wadah">
+  <div class="wadah" style="padding-bottom:104px">
     <h1 class="judul-sekolah js-sekolah"></h1>
-    <div class="kartu tengah"><div style="font-size:48px">🎉</div><p id="sx-semangat" class="semangat"></p></div>
-    <div class="kartu"><b id="sx-judul"></b><div id="sx-ring"></div></div>
-    <button id="sx-kirim" class="btn hijau">Kirim</button>
-    <button id="sx-kembali" class="btn sekunder">Kembali ke soal</button>
+    <div class="kartu tengah" style="padding:12px"><span style="font-size:30px">🎉</span> <p id="sx-semangat" class="semangat" style="display:inline;font-size:16px"></p></div>
+    <div class="kartu" style="padding:12px"><b id="sx-judul"></b><div id="sx-ring" class="ring-grid"></div></div>
   </div>
+  <div class="bar-kirim"><div class="in">
+    <button id="sx-kembali" class="btn sekunder">Kembali ke soal</button>
+    <button id="sx-kirim" class="btn hijau">Kirim</button>
+  </div></div>
 </div>
 
 <!-- ===================== HALAMAN: KIRIM ===================== -->
