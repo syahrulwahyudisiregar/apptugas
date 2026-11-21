@@ -6,6 +6,16 @@
 <meta name="theme-color" content="#1d4ed8">
 <title>SMPN 7 PADANGSIDIMPUAN</title>
 <link rel="manifest" href="manifest-portal.webmanifest">
+<script>
+/* Link ujian (?ujian): pintasan yang dipasang memakai manifest ujian, bukan portal */
+if (/ujian/i.test(location.search)) {
+  document.querySelector('link[rel=manifest]').href = 'manifest-ujian-link.webmanifest';
+  document.querySelector('link[rel=icon]').href = 'icon-ujian-192.png';
+  document.querySelector('link[rel=apple-touch-icon]').href = 'icon-ujian-192.png';
+  document.querySelector('meta[name=theme-color]').content = '#c2410c';
+  document.title = 'Ujian - SMPN 7 PADANGSIDIMPUAN';
+}
+</script>
 <link rel="icon" href="icon-portal-192.png">
 <link rel="apple-touch-icon" href="icon-portal-192.png">
 <link rel="stylesheet" href="style.css?v=Reg03">
