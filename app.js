@@ -1043,7 +1043,7 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
 
 
 var API_URL = 'https://script.google.com/macros/s/AKfycbwI0ZmnStm9K8N5d54A6ZdctFu9hcX2v2G_k3XRIO_7tWkS5kaHjM95Z-u3igTRd4QrgA/exec';
-var VERSI = 'Version.Reg03';
+var VERSI = 'Version.Reg04';
 var SEKOLAH = 'SMPN 7 PADANGSIDIMPUAN';
 var PANJANG_PW = 6;
 var KELAS = [];
@@ -1168,7 +1168,7 @@ function go(nama, param) {
   window.scrollTo(0, 0);
   if (PAGES[nama] && PAGES[nama].buka) PAGES[nama].buka(param);
 }
-var KEMBALI_GURU = { guruKelas: 'guruMenu', guruMurid: 'guruMenu', guruKode: 'guruMenu', guruTugas: 'guruMenu', guruRekap: 'guruTugas', guruRemedi: 'guruTugas', guruNilai: 'guruTugas', guruRekapMenu: 'guruMenu' };
+var KEMBALI_GURU = { guruKelas: 'guruMenu', guruMurid: 'guruMenu', guruKode: 'guruMenu', guruTugas: 'guruMenu', guruRekap: 'guruTugas', guruRemedi: 'guruTugas', guruNilai: 'guruTugas', guruRekapMenu: 'guruMenu', guruVoting: 'guruMenu', guruAlasan: 'guruMenu' };
 function gambarKembaliGuru(nama) { var b = $('btn-kembali-guru'); if (b) b.classList.toggle('tampil', !!KEMBALI_GURU[nama]); }
 document.addEventListener('click', function (e) {
   var b = e.target.closest ? e.target.closest('#btn-kembali-guru') : null;
@@ -1177,7 +1177,7 @@ document.addEventListener('click', function (e) {
   go(KEMBALI_GURU[S.hal] || 'guruMenu');
 });
 function keluar() {
-  hapusLokal('app_status'); if (typeof STATUS_MATERI !== 'undefined') STATUS_MATERI = {};
+  hapusLokal('app_status'); hapusLokal('app_voting'); VOTING = { tampil: false }; if (typeof STATUS_MATERI !== 'undefined') STATUS_MATERI = {};
   S.token = ''; S.murid = null; S.role = null; S.param = null;
   go(HALAMAN_MASUK);
 }
@@ -1322,6 +1322,7 @@ window.addEventListener('load', boot);
 
 // ===================== HALAMAN PILIH MATERI =====================
 var STATUS_MATERI = {};
+var VOTING = { tampil: false };
 var LABEL_STATUS = { terkunci: 'Terkunci', dikerjakan: 'Sedang dikerjakan', menunggu: 'Menunggu dicek', nilai: 'Nilai tampil' };
 
 function semuaNilaiSt(st) {
@@ -1354,8 +1355,16 @@ function ringkasNilai(st) {
   if (all.length > 1) t += 'Nilai tertinggi (dihitung): ' + tertinggiSt(all) + '\n';
   return t.replace(/\n$/, '');
 }
+function kartuVoting() {
+  if (MODE_UJIAN || !VOTING || !VOTING.tampil) return '';
+  var sudah = !!VOTING.sudah;
+  return '<div class="kartu' + (sudah ? ' vt-mati' : '') + '"><button class="kartu-materi" data-id="voting">' +
+    '<div class="ikon">🗳️</div><div class="isi"><b>Voting Guru Terfavorit</b>' +
+    '<span class="lencana ' + (sudah ? 'terkunci' : 'dikerjakan') + '">' + (sudah ? 'Sudah memilih' : 'Pilih 2 guru') + '</span></div></button></div>';
+}
 function gambarMateri() {
   var h = '';
+  h += kartuVoting();
   var urut = MATERI.slice().sort(function (a, b) {
     var sa = STATUS_MATERI[a.id] || {}, sb = STATUS_MATERI[b.id] || {};
     var pa = sa.status === 'nilai' ? 0 : 1;
@@ -1379,8 +1388,8 @@ function gambarMateri() {
 function muatStatusMateri() {
   $('mt-info').textContent = 'Memuat status materi...';
   return api('statusMateri').then(function (r) {
-    if (r && r.ok) { STATUS_MATERI = r.materi || {}; $('mt-info').textContent = ''; simpanLokal('app_status', STATUS_MATERI); }
-    else { STATUS_MATERI = bacaLokal('app_status', {}); $('mt-info').textContent = (r && r.pesan) || 'Gagal memuat status.'; }
+    if (r && r.ok) { STATUS_MATERI = r.materi || {}; VOTING = r.voting || { tampil: false }; $('mt-info').textContent = ''; simpanLokal('app_status', STATUS_MATERI); simpanLokal('app_voting', VOTING); }
+    else { STATUS_MATERI = bacaLokal('app_status', {}); VOTING = bacaLokal('app_voting', { tampil: false }); $('mt-info').textContent = (r && r.pesan) || 'Gagal memuat status.'; }
     gambarMateri();
   });
 }
@@ -1410,6 +1419,7 @@ function mintaKode(judulMateri, pesanGalat) {
 }
 
 async function bukaMateri(id) {
+  if (id === 'voting') { if (VOTING && VOTING.sudah) toast('Kamu sudah memilih'); else go('voting'); return; }
   var m = MATERI.filter(function (x) { return x.id === id; })[0];
   var st = STATUS_MATERI[id] || { status: 'terkunci' };
 
@@ -1452,6 +1462,7 @@ PAGES.materi = {
     $('mt-kelas').textContent = 'Kelas ' + (m.kelas || '');
     $('mt-pindah').textContent = (m.kelasSoal && m.kelasSoal !== m.kelas) ? 'Kelasmu sekarang ' + m.kelas + ' (dipindah guru). Kode soal mengikuti kelas barumu.' : '';
     STATUS_MATERI = bacaLokal('app_status', {});
+    VOTING = bacaLokal('app_voting', { tampil: false });
     gambarMateri();
     muatStatusMateri();
   }
@@ -2568,5 +2579,180 @@ function gambarPid() {
     else toast((r && r.pesan) || 'Gagal mengubah');
   };
 })();
+
+// ===================== VOTING GURU TERFAVORIT (MURID) =====================
+var VT = { guru: [], pilih: [], alasan: {}, max: 2, min: 10, maks: 200 };
+function acakDaftar(arr) {   // urutan diacak supaya nama di atas tidak diuntungkan
+  var b = arr.slice(), i, j, t;
+  for (i = b.length - 1; i > 0; i--) { j = Math.floor(Math.random() * (i + 1)); t = b[i]; b[i] = b[j]; b[j] = t; }
+  return b;
+}
+function vtLayar(n) {   // 1 = pilih guru, 2 = tulis alasan, 0 = tidak ada (memuat atau galat)
+  $('vt-l1').style.display = n === 1 ? '' : 'none';
+  $('vt-l2').style.display = n === 2 ? '' : 'none';
+  $('vt-bar1').style.display = n === 1 ? '' : 'none';
+  $('vt-bar2').style.display = n === 2 ? '' : 'none';
+  window.scrollTo(0, 0);
+}
+function vtGambarPilih() {
+  var n = VT.pilih.length;
+  $('vt-hitung').textContent = 'Dipilih: ' + n + ' dari ' + VT.max;
+  $('vt-lanjut').classList.toggle('redup', n !== VT.max);
+  document.querySelectorAll('#vt-grid .vt-kotak').forEach(function (el) {
+    el.classList.toggle('pilih', VT.pilih.indexOf(VT.guru[Number(el.dataset.i)]) >= 0);
+  });
+}
+function vtPanjang(v) { return String(v).replace(/\s+/g, ' ').trim().length; }
+function vtGambarAlasan(i) {
+  var n = vtPanjang($('vt-al' + i).value);
+  $('vt-h' + i).textContent = n + ' / ' + VT.maks + (n < VT.min ? ' (minimal ' + VT.min + ')' : '');
+}
+function vtSimpanAlasan() { for (var i = 1; i <= 2; i++) if (VT.pilih[i - 1]) VT.alasan[VT.pilih[i - 1]] = $('vt-al' + i).value; }
+function vtSudahMemilih() {
+  VOTING = { tampil: true, sudah: true }; simpanLokal('app_voting', VOTING);
+  go('materi');
+}
+PAGES.voting = {
+  buka: function () {
+    VT.pilih = []; VT.alasan = {};
+    $('vt-grid').innerHTML = ''; vtLayar(0);
+    $('vt-info').textContent = 'Memuat daftar guru...';
+    api('votingDaftar').then(function (r) {
+      if (!(r && r.ok)) {
+        $('vt-info').textContent = (r && r.pesan) || 'Gagal memuat.';
+        if (r && r.ditutup) { VOTING = { tampil: false }; simpanLokal('app_voting', VOTING); }
+        return;
+      }
+      if (r.sudah) { toast('Kamu sudah memilih'); vtSudahMemilih(); return; }
+      VT.guru = acakDaftar(r.guru || []); VT.max = r.pilih || 2; VT.min = r.min || 10; VT.maks = r.maks || 200;
+      $('vt-info').textContent = '';
+      $('vt-petunjuk').textContent = 'Pilih ' + VT.max + ' guru favoritmu';
+      $('vt-grid').innerHTML = VT.guru.map(function (n, i) {
+        return '<button type="button" class="vt-kotak" data-i="' + i + '">' + esc(n) + '</button>';
+      }).join('');
+      vtGambarPilih(); vtLayar(1);
+    });
+  }
+};
+INIT.push(function () {
+  if (!$('h-voting')) return;   // halaman tanpa menu voting (guru, ujian)
+  $('vt-materi').onclick = function () { go('materi'); };
+  $('vt-grid').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.vt-kotak') : null; if (!b) return;
+    var nama = VT.guru[Number(b.dataset.i)], i = VT.pilih.indexOf(nama);
+    if (i >= 0) VT.pilih.splice(i, 1);
+    else if (VT.pilih.length >= VT.max) { toast('Maksimal ' + VT.max + ' guru'); return; }
+    else VT.pilih.push(nama);
+    vtGambarPilih();
+  });
+  $('vt-lanjut').onclick = function () {
+    if (VT.pilih.length !== VT.max) { toast('Pilih ' + VT.max + ' guru dulu'); return; }
+    for (var i = 1; i <= 2; i++) {
+      $('vt-nm' + i).textContent = VT.pilih[i - 1];
+      $('vt-al' + i).value = VT.alasan[VT.pilih[i - 1]] || '';
+      vtGambarAlasan(i);
+    }
+    vtLayar(2);
+  };
+  $('vt-al1').addEventListener('input', function () { vtGambarAlasan(1); });
+  $('vt-al2').addEventListener('input', function () { vtGambarAlasan(2); });
+  $('vt-kembali').onclick = function () { vtSimpanAlasan(); vtLayar(1); };
+  $('vt-kirim').onclick = async function () {
+    var al = [$('vt-al1').value, $('vt-al2').value].map(function (v) { return String(v).replace(/\s+/g, ' ').trim(); });
+    for (var i = 0; i < 2; i++) {
+      if (al[i].length < VT.min) { toast('Alasan untuk ' + VT.pilih[i] + ' minimal ' + VT.min + ' huruf'); $('vt-al' + (i + 1)).focus(); return; }
+    }
+    if (!(await tanya('Kirim pilihan?', VT.pilih.join('\n') + '\n\nSetelah dikirim, pilihan dan alasan tidak bisa diubah.', 'Kirim', 'Periksa lagi'))) return;
+    var b = $('vt-kirim'); sibuk(b, true, 'Mengirim...');
+    var r = await api('votingKirim', { pilih: VT.pilih, alasan: al });
+    sibuk(b, false);
+    if (r && r.ok) { toast('Suaramu tercatat'); vtSudahMemilih(); }
+    else if (r && r.sudah) { toast('Kamu sudah memilih'); vtSudahMemilih(); }
+    else if (r && r.ditutup) { VOTING = { tampil: false }; simpanLokal('app_voting', VOTING); info('Voting ditutup', r.pesan || 'Voting sedang ditutup.'); go('materi'); }
+    else info('Gagal mengirim', (r && r.pesan) || 'Coba lagi.');
+  };
+});
+
+// ===================== VOTING GURU (MENU GURU) =====================
+var GV = { tampil: false, tahap: 0 };
+var GV_JUARA = [{ t: 1, id: 'gv-j3', j: 3 }, { t: 2, id: 'gv-j2', j: 2 }, { t: 3, id: 'gv-j1', j: 1 }];
+function gambarGuruVoting(r) {
+  $('gv-tampil').textContent = GV.tampil ? '👁️ Menu voting TAMPIL untuk murid (tekan untuk menyembunyikan)' : '🙈 Menu voting DISEMBUNYIKAN dari murid (tekan untuk menampilkan)';
+  GV_JUARA.forEach(function (x) {
+    var b = $(x.id), sudah = GV.tahap >= x.t, giliran = GV.tahap === x.t - 1;
+    b.textContent = sudah ? '✅ Juara ' + x.j + ' sudah tampil' : '🏆 Tampilkan juara ' + x.j;
+    b.className = 'btn ' + (giliran ? 'hijau' : 'sekunder redup');
+  });
+  if (r) $('gv-info').textContent = r.guru + ' guru di daftar. ' + r.pemilih + ' murid sudah memilih.';
+}
+function ubahGuruVoting(data, pesan) {
+  return api('guruVotingTampil', data).then(function (r) {
+    if (r && r.ok) { GV.tampil = r.tampil; GV.tahap = r.tahap; gambarGuruVoting(r); if (pesan) toast(pesan(r)); }
+    else toast((r && r.pesan) || 'Gagal mengubah');
+  });
+}
+PAGES.guruVoting = {
+  buka: function () {
+    if (!cekGuru() || !$('gv-tampil')) return;
+    $('gv-info').textContent = 'Memuat...';
+    ubahGuruVoting({});
+  }
+};
+INIT.push(function () {
+  if (!$('h-guruVoting')) return;
+  $('gv-kembali').onclick = function () { go('guruMenu'); };
+  $('gv-tampil').onclick = function () { ubahGuruVoting({ tampil: !GV.tampil }, function (r) { return r.tampil ? 'Menu voting ditampilkan' : 'Menu voting disembunyikan'; }); };
+  GV_JUARA.forEach(function (x) {
+    $(x.id).onclick = function () {
+      if (GV.tahap >= x.t) { toast('Juara ' + x.j + ' sudah tampil'); return; }
+      if (GV.tahap !== x.t - 1) { toast('Tampilkan juara ' + GV_JUARA[x.t - 2].j + ' dulu'); return; }
+      ubahGuruVoting({ tahap: x.t }, function () { return 'Juara ' + x.j + ' dikirim ke layar'; });
+    };
+  });
+  $('gv-ulang').onclick = async function () {
+    if (!(await tanya('Ulang dari awal?', 'Semua juara disembunyikan lagi di layar.', 'Ulang', 'Batal'))) return;
+    ubahGuruVoting({ tahap: 0 }, function () { return 'Layar juara diulang'; });
+  };
+});
+
+// ===================== ALASAN VOTING (MENU GURU) =====================
+function alKotak(id, html) { var el = $(id); el.innerHTML = html; el.style.display = html ? '' : 'none'; }
+function muatAlasan() {
+  var k = $('al-kelas').value;
+  if (!k) { alKotak('al-rekap', ''); alKotak('al-tabel', ''); $('al-info').textContent = 'Pilih kelas untuk melihat hasil voting.'; return; }
+  $('al-info').textContent = 'Memuat...'; alKotak('al-rekap', ''); alKotak('al-tabel', '');
+  api('guruVotingRekap', { kelas: k }).then(function (r) {
+    if ($('al-kelas').value !== k) return;   // pilihan kelas sudah berganti
+    if (!(r && r.ok)) { $('al-info').textContent = (r && r.pesan) || 'Gagal memuat.'; return; }
+    var semua = k === 'SEMUA';
+    $('al-info').textContent = (semua ? 'Semua kelas' : 'Kelas ' + k) + ': ' + r.pemilih + ' murid sudah memilih';
+    var h = '<div class="al-judul">Rekap suara guru</div>';
+    if (!r.rekap.length) h += '<p class="nl tengah" style="padding:0 12px 12px">Belum ada suara.</p>';
+    else {
+      h += '<table class="tbl"><colgroup><col style="width:12%"><col style="width:68%"><col style="width:20%"></colgroup><tr><th>No</th><th>Nama guru</th><th>Suara</th></tr>';
+      r.rekap.forEach(function (x, i) { h += '<tr><td>' + (i + 1) + '</td><td>' + esc(x.nama) + '</td><td>' + x.suara + '</td></tr>'; });
+      h += '</table>';
+    }
+    alKotak('al-rekap', h);
+    if (semua || !r.baris.length) return;
+    var t = '<div class="al-judul">Alasan murid</div><table class="tbl"><colgroup><col style="width:8%"><col style="width:22%"><col style="width:35%"><col style="width:35%"></colgroup><tr><th>No</th><th>Nama murid</th><th>Guru 1 dan alasan</th><th>Guru 2 dan alasan</th></tr>';
+    r.baris.forEach(function (x, i) {
+      t += '<tr><td>' + (i + 1) + '</td><td>' + esc(x.nama) + '</td>' +
+        '<td><div class="al-n">' + esc(x.guru1) + '</div><div class="al-r">' + esc(x.alasan1) + '</div></td>' +
+        '<td><div class="al-n">' + esc(x.guru2) + '</div><div class="al-r">' + esc(x.alasan2) + '</div></td></tr>';
+    });
+    alKotak('al-tabel', t + '</table>');
+  });
+}
+PAGES.guruAlasan = {
+  buka: function () { if (!cekGuru() || !$('al-kelas')) return; muatAlasan(); }
+};
+INIT.push(function () {
+  if (!$('h-guruAlasan')) return;
+  isiKelas($('al-kelas'));
+  $('al-kelas').options[0].insertAdjacentHTML('afterend', '<option value="SEMUA">Semua kelas</option>');
+  $('al-kelas').onchange = muatAlasan;
+  $('al-kembali').onclick = function () { go('guruMenu'); };
+});
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') { navigator.serviceWorker.register('sw.js').catch(function () {}); }

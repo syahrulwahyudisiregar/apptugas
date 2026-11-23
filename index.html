@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest-portal.webmanifest">
 <link rel="icon" href="icon-portal-192.png">
 <link rel="apple-touch-icon" href="icon-portal-192.png">
-<link rel="stylesheet" href="style.css?v=Reg03">
+<link rel="stylesheet" href="style.css?v=Reg04">
 <script>
 /* Link ujian (?ujian): pintasan yang dipasang memakai manifest ujian, bukan portal */
 if (/ujian/i.test(location.search)) {
@@ -110,6 +110,43 @@ if (/ujian/i.test(location.search)) {
     <div id="mt-catatan" class="info">Nilai tertinggi yang akan dihitung. Jika ingin mengubah nilai, silakan pilih materinya dan minta remedi.</div>
     <div id="mt-daftar"></div>
   </div>
+</div>
+<style>
+.vt-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.vt-kotak{min-height:58px;padding:8px 4px;border:1.5px solid var(--garis);border-radius:12px;background:#fff;color:var(--teks);font-family:inherit;font-size:12px;line-height:1.25;font-weight:600;text-align:center;cursor:pointer;word-break:break-word}
+.vt-kotak.pilih{border-color:var(--utama);background:var(--utama-muda);color:var(--utama-gelap)}
+.vt-nm{font-weight:700;color:var(--utama-gelap);margin-bottom:6px}
+.vt-hitung{flex:none;align-self:center;font-weight:700;font-size:14px;color:var(--utama-gelap)}
+.kartu.vt-mati{background:#e2e8f0;opacity:.8;filter:grayscale(1)}
+.btn.redup{opacity:.5}
+textarea.isian{resize:none;min-height:84px}
+body[data-hal="voting"] .versi{bottom:calc(80px + env(safe-area-inset-bottom))}
+</style>
+<div id="h-voting" class="halaman">
+  <div class="wadah" style="padding-bottom:100px">
+    <button id="vt-materi" class="btn sekunder kecil" type="button">← Materi</button>
+    <h1 class="judul-sekolah">Guru Terfavorit</h1>
+    <div id="vt-info" class="info"></div>
+    <div id="vt-l1" style="display:none">
+      <p id="vt-petunjuk" class="sub"></p>
+      <div id="vt-grid" class="vt-grid"></div>
+    </div>
+    <div id="vt-l2" style="display:none">
+      <p class="sub">Tulis alasan pilihanmu</p>
+      <div class="kartu">
+        <div id="vt-nm1" class="vt-nm"></div>
+        <textarea id="vt-al1" class="isian" maxlength="200" placeholder="Tulis alasanmu di sini"></textarea>
+        <div id="vt-h1" class="hitung"></div>
+      </div>
+      <div class="kartu">
+        <div id="vt-nm2" class="vt-nm"></div>
+        <textarea id="vt-al2" class="isian" maxlength="200" placeholder="Tulis alasanmu di sini"></textarea>
+        <div id="vt-h2" class="hitung"></div>
+      </div>
+    </div>
+  </div>
+  <div id="vt-bar1" class="nav-bawah" style="display:none"><div class="in"><span id="vt-hitung" class="vt-hitung"></span><button id="vt-lanjut" class="btn" type="button">Lanjut</button></div></div>
+  <div id="vt-bar2" class="nav-bawah" style="display:none"><div class="in"><button id="vt-kembali" class="btn sekunder" type="button">Kembali</button><button id="vt-kirim" class="btn" type="button">Kirim</button></div></div>
 </div>
 <!-- ===================== HALAMAN: SOAL ===================== -->
 <style>
@@ -302,8 +339,51 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
       <button class="menu-kartu" data-go="guruMurid"><span>🛠️</span>Kelola murid</button>
       <button class="menu-kartu" data-go="guruKode"><span>🔑</span>Kode soal</button>
       <button class="menu-kartu" data-go="guruTugas"><span>📝</span>Daftar tugas</button>
+      <button class="menu-kartu" data-go="guruVoting"><span>🗳️</span>Voting guru</button>
+      <button class="menu-kartu" data-go="guruAlasan"><span>💬</span>Alasan voting</button>
     </div>
     <button id="gm-keluar" class="btn sekunder">Keluar</button>
+  </div>
+</div>
+
+<!-- ===================== MODE GURU: VOTING GURU ===================== -->
+<style>
+.btn.redup{opacity:.5}
+.al-judul{padding:10px 12px;font-weight:700;color:var(--utama-gelap)}
+.al-n{font-weight:700}
+.al-r{font-size:12px;color:var(--abu);margin-top:3px}
+</style>
+<div id="h-guruVoting" class="halaman">
+  <div class="wadah">
+    <h1 class="judul-sekolah">Voting Guru</h1>
+    <div class="kartu">
+      <div id="gv-info" class="info"></div>
+      <button id="gv-tampil" class="btn sekunder" type="button"></button>
+    </div>
+    <div class="kartu">
+      <label style="margin-top:0">Layar juara (voting.html)</label>
+      <button id="gv-j3" class="btn sekunder redup" type="button"></button>
+      <button id="gv-j2" class="btn sekunder redup" type="button"></button>
+      <button id="gv-j1" class="btn sekunder redup" type="button"></button>
+      <button id="gv-ulang" class="btn sekunder" type="button">🔄 Ulang dari awal</button>
+      <p class="nl">Tekan berurutan: juara 3, lalu 2, lalu 1. Layar menghitung mundur 5 detik, lalu kembang api dan nama juara muncul.</p>
+    </div>
+    <button id="gv-kembali" class="btn sekunder">Kembali ke menu</button>
+  </div>
+</div>
+
+<!-- ===================== MODE GURU: ALASAN VOTING ===================== -->
+<div id="h-guruAlasan" class="halaman">
+  <div class="wadah lebar">
+    <h1 class="judul-sekolah">Alasan Voting</h1>
+    <div class="kartu">
+      <label for="al-kelas" style="margin-top:0">Pilih kelas</label>
+      <select id="al-kelas" class="isian"></select>
+      <div id="al-info" class="info" style="margin-top:10px"></div>
+    </div>
+    <div class="kartu" id="al-rekap" style="padding:0;overflow:hidden;display:none"></div>
+    <div class="kartu" id="al-tabel" style="padding:0;overflow:hidden;display:none"></div>
+    <button id="al-kembali" class="btn sekunder">Kembali ke menu</button>
   </div>
 </div>
 
@@ -464,6 +544,6 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
 
 <!-- ===================== BANK SOAL (tempel isi file apa adanya) ===================== -->
 <script>window.MODE = /ujian/i.test(location.search) ? 'ujian' : 'portal';</script>
-<script src="app.js?v=Reg03"></script>
+<script src="app.js?v=Reg04"></script>
 </body>
 </html>

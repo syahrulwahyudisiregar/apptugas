@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest-guru.webmanifest">
 <link rel="icon" href="icon-guru-192.png">
 <link rel="apple-touch-icon" href="icon-guru-192.png">
-<link rel="stylesheet" href="style.css?v=Reg03">
+<link rel="stylesheet" href="style.css?v=Reg04">
 </head>
 <body>
 
@@ -284,8 +284,51 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
       <button class="menu-kartu" data-go="guruKode"><span>🔑</span>Kode soal</button>
       <button class="menu-kartu" data-go="guruTugas"><span>📝</span>Daftar tugas</button>
       <button class="menu-kartu" data-go="guruRekapMenu"><span>📊</span>Rekap nilai</button>
+      <button class="menu-kartu" data-go="guruVoting"><span>🗳️</span>Voting guru</button>
+      <button class="menu-kartu" data-go="guruAlasan"><span>💬</span>Alasan voting</button>
     </div>
     <button id="gm-keluar" class="btn sekunder">Keluar</button>
+  </div>
+</div>
+
+<!-- ===================== MODE GURU: VOTING GURU ===================== -->
+<style>
+.btn.redup{opacity:.5}
+.al-judul{padding:10px 12px;font-weight:700;color:var(--utama-gelap)}
+.al-n{font-weight:700}
+.al-r{font-size:12px;color:var(--abu);margin-top:3px}
+</style>
+<div id="h-guruVoting" class="halaman">
+  <div class="wadah">
+    <h1 class="judul-sekolah">Voting Guru</h1>
+    <div class="kartu">
+      <div id="gv-info" class="info"></div>
+      <button id="gv-tampil" class="btn sekunder" type="button"></button>
+    </div>
+    <div class="kartu">
+      <label style="margin-top:0">Layar juara (voting.html)</label>
+      <button id="gv-j3" class="btn sekunder redup" type="button"></button>
+      <button id="gv-j2" class="btn sekunder redup" type="button"></button>
+      <button id="gv-j1" class="btn sekunder redup" type="button"></button>
+      <button id="gv-ulang" class="btn sekunder" type="button">🔄 Ulang dari awal</button>
+      <p class="nl">Tekan berurutan: juara 3, lalu 2, lalu 1. Layar menghitung mundur 5 detik, lalu kembang api dan nama juara muncul.</p>
+    </div>
+    <button id="gv-kembali" class="btn sekunder">Kembali ke menu</button>
+  </div>
+</div>
+
+<!-- ===================== MODE GURU: ALASAN VOTING ===================== -->
+<div id="h-guruAlasan" class="halaman">
+  <div class="wadah lebar">
+    <h1 class="judul-sekolah">Alasan Voting</h1>
+    <div class="kartu">
+      <label for="al-kelas" style="margin-top:0">Pilih kelas</label>
+      <select id="al-kelas" class="isian"></select>
+      <div id="al-info" class="info" style="margin-top:10px"></div>
+    </div>
+    <div class="kartu" id="al-rekap" style="padding:0;overflow:hidden;display:none"></div>
+    <div class="kartu" id="al-tabel" style="padding:0;overflow:hidden;display:none"></div>
+    <button id="al-kembali" class="btn sekunder">Kembali ke menu</button>
   </div>
 </div>
 
@@ -476,6 +519,6 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
 
 <!-- ===================== BANK SOAL (tempel isi file apa adanya) ===================== -->
 <script>window.MODE = 'guru';</script>
-<script src="app.js?v=Reg03"></script>
+<script src="app.js?v=Reg04"></script>
 </body>
 </html>
