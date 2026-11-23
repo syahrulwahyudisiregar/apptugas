@@ -283,6 +283,7 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
       <button class="menu-kartu" data-go="guruMurid"><span>🛠️</span>Kelola murid</button>
       <button class="menu-kartu" data-go="guruKode"><span>🔑</span>Kode soal</button>
       <button class="menu-kartu" data-go="guruTugas"><span>📝</span>Daftar tugas</button>
+      <button class="menu-kartu" data-go="guruRekapMenu"><span>📊</span>Rekap nilai</button>
     </div>
     <button id="gm-keluar" class="btn sekunder">Keluar</button>
   </div>
@@ -395,6 +396,35 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
       <div id="gr-tabel" style="margin-top:8px"></div>
     </div>
     <button id="gr-kembali" class="btn sekunder">Kembali</button>
+  </div>
+</div>
+
+<!-- ===================== MODE GURU: REKAP NILAI SEMUA MATERI ===================== -->
+<style>
+.rk-kelas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rk-kelas button{min-height:44px;border:1.5px solid var(--garis);border-radius:12px;background:#fff;color:var(--teks);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.rk-kelas button.pilih{background:var(--utama);border-color:var(--utama);color:#fff}
+.rk-tbl{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff}
+.rk-tbl th,.rk-tbl td{border:1px solid var(--garis);padding:6px 2px;text-align:center;font-size:11px;line-height:1.25;word-break:break-word}
+.rk-tbl th{background:var(--utama-muda);color:var(--utama-gelap)}
+.rk-tbl td.n{text-align:left;padding-left:5px}
+.rk-tbl td.k{color:#94a3b8}
+.rk-ket{font-size:11px;color:var(--abu);margin-top:8px;line-height:1.6}
+</style>
+<div id="h-guruRekapMenu" class="halaman">
+  <div class="wadah">
+    <h1 class="judul-sekolah">Rekap Nilai</h1>
+    <div class="kartu">
+      <label style="margin-top:0">Pilih kelas</label>
+      <div id="rk-kelas" class="rk-kelas"></div>
+    </div>
+    <div class="kartu">
+      <b id="rk-judul"></b>
+      <div id="rk-info" class="info" style="margin-top:10px"></div>
+      <div id="rk-tabel" style="margin-top:8px"></div>
+      <div id="rk-ket" class="rk-ket"></div>
+    </div>
+    <button id="rk-kembali" class="btn sekunder">Kembali ke menu</button>
   </div>
 </div>
 

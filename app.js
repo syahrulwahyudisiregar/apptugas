@@ -1168,7 +1168,7 @@ function go(nama, param) {
   window.scrollTo(0, 0);
   if (PAGES[nama] && PAGES[nama].buka) PAGES[nama].buka(param);
 }
-var KEMBALI_GURU = { guruKelas: 'guruMenu', guruMurid: 'guruMenu', guruKode: 'guruMenu', guruTugas: 'guruMenu', guruRekap: 'guruTugas', guruRemedi: 'guruTugas', guruNilai: 'guruTugas' };
+var KEMBALI_GURU = { guruKelas: 'guruMenu', guruMurid: 'guruMenu', guruKode: 'guruMenu', guruTugas: 'guruMenu', guruRekap: 'guruTugas', guruRemedi: 'guruTugas', guruNilai: 'guruTugas', guruRekapMenu: 'guruMenu' };
 function gambarKembaliGuru(nama) { var b = $('btn-kembali-guru'); if (b) b.classList.toggle('tampil', !!KEMBALI_GURU[nama]); }
 document.addEventListener('click', function (e) {
   var b = e.target.closest ? e.target.closest('#btn-kembali-guru') : null;
@@ -2195,6 +2195,70 @@ PAGES.guruRekap = {
     });
   }
 };
+
+// ---------- Rekap nilai semua materi (menu guru) ----------
+var RK = { kelas: '', seq: 0 };
+// Singkat nama materi otomatis: pendek tetap; satu kata panjang dipotong; beberapa kata jadi huruf awal
+function singkatMateri(j) {
+  j = String(j || '').trim();
+  if (j.length <= 8) return j;
+  var kata = j.split(/[\s,]+/).filter(Boolean);
+  if (kata.length < 2) return j.slice(0, 5) + '.';
+  var sambung = ['dan', 'atau', 'dengan', 'di', 'ke', 'dari', 'yang', '&'];
+  var inisial = kata.filter(function (w) { return sambung.indexOf(w.toLowerCase()) < 0; })
+    .map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
+  return inisial || j.slice(0, 5) + '.';
+}
+function gambarTombolRekap() {
+  $('rk-kelas').innerHTML = KELAS.map(function (k) {
+    return '<button type="button" data-k="' + k + '" class="' + (RK.kelas === k ? 'pilih' : '') + '">' + k + '</button>';
+  }).join('');
+}
+function muatRekapSemua() {
+  var k = RK.kelas, n = ++RK.seq;
+  $('rk-tabel').innerHTML = ''; $('rk-ket').innerHTML = '';
+  if (!k) { $('rk-judul').textContent = ''; $('rk-info').textContent = 'Pilih kelas untuk melihat rekap nilai.'; return; }
+  $('rk-judul').textContent = 'Kelas ' + k;
+  $('rk-info').textContent = 'Memuat...';
+  api('guruRekapSemua', { kelas: k }).then(function (r) {
+    if (n !== RK.seq) return;   // sudah pindah kelas
+    if (!(r && r.ok)) { $('rk-info').textContent = (r && r.pesan) || 'Gagal memuat.'; return; }
+    var baris = (r.baris || []).slice().sort(urutNama);
+    $('rk-info').textContent = baris.length + ' murid · nilai tertinggi tiap materi';
+    var lm = Math.floor(60 / MATERI.length);
+    var h = '<table class="rk-tbl"><colgroup><col style="width:8%"><col style="width:' + (100 - 8 - lm * MATERI.length) + '%">' +
+      MATERI.map(function () { return '<col style="width:' + lm + '%">'; }).join('') + '</colgroup><tr><th>No</th><th>Nama</th>' +
+      MATERI.map(function (m) { return '<th>' + esc(singkatMateri(m.judul)) + '</th>'; }).join('') + '</tr>';
+    baris.forEach(function (x, i) {
+      h += '<tr><td>' + (i + 1) + '</td><td class="n">' + esc(x.nama) + '</td>';
+      MATERI.forEach(function (m) {
+        var c = (x.sel && x.sel[m.id]) || { nilai: '', tunggu: false };
+        var ada = c.nilai !== '' && c.nilai != null;
+        if (!ada && !c.tunggu) h += '<td class="k">-</td>';
+        else h += '<td>' + (ada ? '<b>' + esc(c.nilai) + '</b>' : '') + (c.tunggu ? (ada ? ' ' : '') + '⏳' : '') + '</td>';
+      });
+      h += '</tr>';
+    });
+    $('rk-tabel').innerHTML = h + '</table>';
+    var ket = MATERI.filter(function (m) { return singkatMateri(m.judul) !== m.judul; })
+      .map(function (m) { return esc(singkatMateri(m.judul)) + ' = ' + esc(m.judul); });
+    ket.push('⏳ = sudah mengirim, menunggu dinilai');
+    $('rk-ket').innerHTML = ket.join(' · ');
+  });
+}
+PAGES.guruRekapMenu = {
+  buka: function () {
+    if (!cekGuru()) return;
+    gambarTombolRekap(); muatRekapSemua();
+  }
+};
+INIT.push(function () {
+  $('rk-kelas').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    RK.kelas = b.dataset.k; gambarTombolRekap(); muatRekapSemua();
+  });
+  $('rk-kembali').onclick = function () { go('guruMenu'); };
+});
 
 // ===================== PENILAIAN =====================
 var GN = { id: '', materi: '', antrian: [], pos: 0, baru: false, dirty: false, tersimpan: false, ok: 0 };
