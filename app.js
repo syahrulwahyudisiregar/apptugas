@@ -2253,6 +2253,7 @@ PAGES.guruRekapMenu = {
   }
 };
 INIT.push(function () {
+  if (!$('rk-kelas') || !$('rk-kembali')) return;   // halaman tanpa menu rekap (portal siswa, ujian)
   $('rk-kelas').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     RK.kelas = b.dataset.k; gambarTombolRekap(); muatRekapSemua();
