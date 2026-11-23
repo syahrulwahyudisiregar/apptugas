@@ -1571,7 +1571,7 @@ function gambarFoto() {
   }
   if (n < 2) h += '<button class="tambah-foto" id="sl-tambah">📷<br>Ambil / pilih foto</button>';
   $('sl-foto').innerHTML = h;
-  var t = $('sl-tambah'); if (t) t.onclick = function () { $('sl-file').click(); };
+  var t = $('sl-tambah'); if (t) t.onclick = function () { ujianFotoMulai(); $('sl-file').click(); };
 }
 function render() {
   $('sl-judul').textContent = bankSkr().judul;
@@ -1710,8 +1710,10 @@ INIT.push(function () {
     var z = e.target.closest('[data-zoom]'); if (z) zoomFoto(z.src);
   });
   $('sl-file').addEventListener('change', function () {
+    ujianFotoSelesai();
     var f = this.files && this.files[0]; this.value = ''; if (f) tanganiFile(f);
   });
+  $('sl-file').addEventListener('cancel', function () { ujianFotoSelesai(); });
   // Coba ulang simpan otomatis bila sinyal sempat putus
   setInterval(function () { if (S.hal === 'soal' && Object.keys(ST.kotor).length) flushDraf(); }, 15000);
   window.addEventListener('online', function () { if (Object.keys(ST.kotor).length) flushDraf(); });
@@ -2402,7 +2404,7 @@ INIT.push(function () {
 
 
 // ===================== UJIAN: WAKTU, LAYAR PENUH, PELANGGARAN =====================
-var UJ = { aktif: false, akhir: 0, tmr: null, last: 0, fsAda: false, dlg: false, kirim: false, plg: 0 };
+var UJ = { foto: false, fotoT: 0, aktif: false, akhir: 0, tmr: null, last: 0, fsAda: false, dlg: false, kirim: false, plg: 0 };
 function ujianLayarPenuh() {
   try {
     var e = document.documentElement, f = e.requestFullscreen || e.webkitRequestFullscreen || e.mozRequestFullScreen;
@@ -2466,8 +2468,21 @@ async function ujianKirimOtomatis(alasan) {
     ujianKirimOtomatis(alasan);
   }
 }
+// Mengambil foto jawaban (kamera/galeri) membuat halaman tersembunyi sebentar: itu bukan pelanggaran.
+function ujianFotoMulai() {
+  UJ.foto = true; clearTimeout(UJ.fotoT);
+  UJ.fotoT = setTimeout(function () { UJ.foto = false; }, 180000);   // pengaman: maksimal 3 menit
+}
+function ujianFotoSelesai() {
+  if (!UJ.foto) return;
+  clearTimeout(UJ.fotoT);
+  UJ.fotoT = setTimeout(function () {   // jeda agar kejadian keluar-layar yang terlambat tidak dihitung
+    UJ.foto = false;
+    if (UJ.aktif && !UJ.kirim) ujianLayarPenuh();
+  }, 2000);
+}
 async function ujianPelanggaran(sebab) {
-  if (!UJ.aktif || UJ.kirim || UJ.dlg) return;
+  if (!UJ.aktif || UJ.kirim || UJ.dlg || UJ.foto) return;
   var t = Date.now(); if (t - UJ.last < 2000) return; UJ.last = t;
   var r = await api('ujianPelanggaran', { jenis: sebab });
   if (!(r && r.ok) || r.dobel) return;
@@ -2477,7 +2492,10 @@ async function ujianPelanggaran(sebab) {
   await dialog('Peringatan ' + r.jumlah + ' dari ' + r.batas, 'Kamu keluar dari layar ujian (' + sebab + '). Pelanggaran ke-' + (r.batas + 1) + ' akan mengirim jawabanmu otomatis.', [{ t: 'Kembali ke ujian', v: true }]);
   UJ.dlg = false; ujianLayarPenuh();
 }
-document.addEventListener('visibilitychange', function () { if (document.hidden) ujianPelanggaran('pindah aplikasi atau tab'); });
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) ujianPelanggaran('pindah aplikasi atau tab');
+  else ujianFotoSelesai();   // kembali dari kamera/galeri
+});
 document.addEventListener('fullscreenchange', function () {
   if (document.fullscreenElement) { UJ.fsAda = true; return; }
   if (UJ.fsAda) ujianPelanggaran('keluar dari layar penuh');
