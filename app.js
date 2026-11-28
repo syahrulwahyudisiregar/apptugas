@@ -2,6 +2,10 @@ var MODE = window.MODE || 'portal';
 var PFX = MODE === 'portal' ? '' : MODE + '_';                       // penyimpanan sesi dipisah per halaman
 var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
 
+// Pangkat kecil di atas angka, contoh 2 pangkat 10 ditulis 2¹⁰
+var SUP_DIGIT = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+function supPangkat(n) { return String(n).split('').map(function (d) { return SUP_DIGIT[Number(d)]; }).join(''); }
+
 /* TEMPEL ISI bank-heksadesimal.js DI SINI */
 /**
  * BANK SOAL: HEKSADESIMAL
@@ -101,21 +105,13 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
   }
 
   function langkahHex2Des(hex) {
-    var steps = [], bagian = [], total = 0, i;
-    var nilai = [];
-    for (i = 0; i < hex.length; i++) nilai.push(HEX.indexOf(hex.charAt(i)));
-    var ket = [];
-    for (i = 0; i < hex.length; i++) {
-      if (nilai[i] > 9) ket.push(hex.charAt(i) + ' = ' + nilai[i]);
+    var steps = ['## Ubah ' + hex + ' ke desimal'], bagian = [], total = 0, k;
+    for (k = 0; k < hex.length; k++) {
+      var ch = hex.charAt(hex.length - 1 - k), v = HEX.indexOf(ch), bobot = Math.pow(16, k), hasil = v * bobot;
+      steps.push(ch + (v > 9 ? ' (' + v + ')' : '') + ' × 16' + supPangkat(k) + ' = ' + v + ' × ' + bobot + ' = ' + hasil);
+      bagian.push(hasil); total += hasil;
     }
-    if (ket.length) steps.push('Ubah huruf ke angka: ' + ket.join(', '));
-    for (i = 0; i < hex.length; i++) {
-      var pangkat = hex.length - 1 - i;
-      var bobot = Math.pow(16, pangkat);
-      bagian.push(nilai[i] + ' × ' + bobot);
-      total += nilai[i] * bobot;
-    }
-    steps.push(bagian.join(' + ') + ' = ' + total);
+    steps.push('Jumlahkan: ' + bagian.join(' + ') + ' = ' + total);
     return steps;
   }
 
@@ -268,15 +264,13 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
   }
 
   function langkahBin2Des(bin) {
-    var steps = [], bagian = [], yang = [], total = 0, i;
-    for (i = 0; i < bin.length; i++) {
-      var bit = bin.charAt(i) === '1' ? 1 : 0;
-      var bobot = Math.pow(2, bin.length - 1 - i);
-      bagian.push(bit + ' × ' + bobot);
-      if (bit) { yang.push(bobot); total += bobot; }
+    var steps = ['## Ubah ' + bin + ' ke desimal'], bagian = [], total = 0, k;
+    for (k = 0; k < bin.length; k++) {
+      var bit = bin.charAt(bin.length - 1 - k) === '1' ? 1 : 0, hasil = bit * Math.pow(2, k);
+      steps.push(bit + ' × 2' + supPangkat(k) + ' = ' + hasil);
+      bagian.push(hasil); total += hasil;
     }
-    steps.push(bagian.join(' + '));
-    steps.push('Jumlahkan bobot yang bernilai 1: ' + yang.join(' + ') + ' = ' + total);
+    steps.push('Jumlahkan: ' + bagian.join(' + ') + ' = ' + total);
     return steps;
   }
 
@@ -464,6 +458,22 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
     return bagian.join(' + ') + ' = ' + total;
   }
 
+  function langkahBitKata(huruf) {   // satu blok per huruf, satu baris per bit (panjang sesuai bit di soal)
+    var out = [];
+    huruf.forEach(function (h, n) {
+      out.push('## Huruf ' + (n + 1) + ': ' + h.biner);
+      var bagian = [], total = 0, k;
+      for (k = 0; k < h.biner.length; k++) {
+        var bit = h.biner.charAt(h.biner.length - 1 - k) === '1' ? 1 : 0, hasil = bit * Math.pow(2, k);
+        out.push(bit + ' × 2' + supPangkat(k) + ' = ' + hasil);
+        bagian.push(hasil); total += hasil;
+      }
+      out.push('Jumlahkan: ' + bagian.join(' + ') + ' = ' + total);
+      out.push('Kode ' + h.kode + ' adalah huruf ' + h.char);
+    });
+    return out;
+  }
+
   function buatSatu(pola, kata, no) {
     var huruf = kata.split('').map(function (c) {
       return { char: c, kode: c.charCodeAt(0), biner: kodeBin(c) };
@@ -491,9 +501,7 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
       baris: huruf.map(function (h) { return { biner: h.biner, kunci: h.char }; }),
       kunci: huruf.map(function (h) { return h.char; }),
       input: { izin: 'huruf', maks: 1 },
-      langkah: huruf.map(function (h) {
-        return h.biner + ' = ' + uraiBobot(h.biner) + ', kode ' + h.kode + ' adalah huruf ' + h.char;
-      })
+      langkah: langkahBitKata(huruf)
     };
   }
 
@@ -691,6 +699,22 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
     return bagian.join(' + ') + ' = ' + total;
   }
 
+  function langkahBitKata(huruf) {   // satu blok per huruf, satu baris per bit (panjang sesuai bit di soal)
+    var out = [];
+    huruf.forEach(function (h, n) {
+      out.push('## Huruf ' + (n + 1) + ': ' + h.biner);
+      var bagian = [], total = 0, k;
+      for (k = 0; k < h.biner.length; k++) {
+        var bit = h.biner.charAt(h.biner.length - 1 - k) === '1' ? 1 : 0, hasil = bit * Math.pow(2, k);
+        out.push(bit + ' × 2' + supPangkat(k) + ' = ' + hasil);
+        bagian.push(hasil); total += hasil;
+      }
+      out.push('Jumlahkan: ' + bagian.join(' + ') + ' = ' + total);
+      out.push('Kode ' + h.kode + ' adalah huruf ' + h.char);
+    });
+    return out;
+  }
+
   function buatSatu(pola, kata, no) {
     var huruf = kata.split('').map(function (c) {
       return { char: c, kode: c.charCodeAt(0), biner: kodeBin(c) };
@@ -718,9 +742,7 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
       baris: huruf.map(function (h) { return { biner: h.biner, kunci: h.char }; }),
       kunci: huruf.map(function (h) { return h.char; }),
       input: { izin: 'huruf', maks: 1 },
-      langkah: huruf.map(function (h) {
-        return h.biner + ' = ' + uraiBobot(h.biner) + ', kode ' + h.kode + ' adalah huruf ' + h.char;
-      })
+      langkah: langkahBitKata(huruf)
     };
   }
 
@@ -1043,7 +1065,7 @@ var HALAMAN_MASUK = MODE === 'guru' ? 'guruLogin' : 'login';
 
 
 var API_URL = 'https://script.google.com/macros/s/AKfycbwI0ZmnStm9K8N5d54A6ZdctFu9hcX2v2G_k3XRIO_7tWkS5kaHjM95Z-u3igTRd4QrgA/exec';
-var VERSI = 'Version.Reg04';
+var VERSI = 'Version.Reg05';
 var SEKOLAH = 'SMPN 7 PADANGSIDIMPUAN';
 var PANJANG_PW = 6;
 var KELAS = [];
@@ -1188,6 +1210,7 @@ history.pushState({ n: 1 }, '');
 window.addEventListener('popstate', function () {
   history.pushState({ n: 1 }, '');
   if (!S.hal || S.hal === 'login' || dialogTerbuka) return;
+  if (S.hal === 'hasil') { go('materi'); return; }
   dialog('Keluar dari halaman ini?', 'Jawaban yang sudah diisi tetap tersimpan di HP.', [
     { t: 'Tetap di halaman ini', v: false },
     { t: 'Kembali ke halaman login', v: true, g: 'sekunder' }
@@ -1379,7 +1402,8 @@ function gambarMateri() {
     h += '<div class="kartu"><button class="kartu-materi" data-id="' + m.id + '">' +
       '<div class="ikon">' + m.ikon + '</div>' +
       '<div class="isi"><b>' + esc(m.judul) + '</b>' +
-      '<span class="lencana ' + st.status + '">' + esc(label) + '</span>' + barisNilai(st) + '</div></button></div>';
+      '<span class="lencana ' + st.status + '">' + esc(label) + '</span>' + barisNilai(st) +
+      (st.status === 'nilai' && m.id !== 'ujian' ? '<div class="nl">Ketuk untuk lihat hasil dan catatan guru</div>' : '') + '</div></button></div>';
   });
   if (MODE_UJIAN && !h) h = '<p class="tengah">Ujian belum dibuka oleh guru. Tunggu guru membukanya.</p>';
   $('mt-daftar').innerHTML = h;
@@ -1426,14 +1450,8 @@ async function bukaMateri(id) {
   if (st.status === 'menunggu') { info('Sudah dikirim', 'Jawaban ' + m.judul + ' sudah terkirim.\nNilai akan tampil setelah guru memeriksanya.'); return; }
   if (st.status === 'nilai') {
     if (id === 'ujian') { info('Nilai ' + m.judul, 'Nilai ujianmu: ' + (st.nilai !== undefined && st.nilai !== '' ? st.nilai : '-')); return; }
-    if (st.diminta) { info('Nilai ' + m.judul, ringkasNilai(st) + '\n\nPermintaan remedi sudah dikirim. Menunggu persetujuan guru.'); return; }
-    var pil = await dialog('Nilai ' + m.judul, ringkasNilai(st) + '\n\nJika ingin remedi, tekan tombol ini.', [
-      { t: 'Minta Remedi', v: true }, { t: 'Tutup', v: false, g: 'sekunder' }
-    ]);
-    if (!pil) return;
-    var rm = await api('mintaRemedi', { materi: id });
-    if (rm && rm.ok) { st.diminta = true; STATUS_MATERI[id] = st; simpanLokal('app_status', STATUS_MATERI); gambarMateri(); toast('Permintaan remedi dikirim ke guru'); }
-    else info('Gagal meminta remedi', (rm && rm.pesan) || 'Coba lagi.');
+    if (!$('h-hasil')) { info('Nilai ' + m.judul, ringkasNilai(st)); return; }
+    go('hasil', id);
     return;
   }
   if (st.status === 'dikerjakan') { if (id === 'ujian') await ujianGerbang(false); go('soal', id); return; }
@@ -1477,7 +1495,7 @@ INIT.push(function () {
 
 
 // ===================== HALAMAN SOAL =====================
-var ST = { materi: '', murid: '', soal: [], jawab: [], foto: [], lokal: {}, waktu: [], ver: [], kotor: {}, up: {}, idx: 0 };
+var ST = { materi: '', murid: '', soal: [], jawab: [], foto: [], lokal: {}, waktu: [], ver: [], kotor: {}, up: {}, gagal: {}, idx: 0 };
 
 function bankSkr() { return BANK_SOAL[ST.materi]; }
 function soalSkr() { return ST.soal[ST.idx]; }
@@ -1534,10 +1552,12 @@ function jadwalSimpan() { clearTimeout(tDebounce); tDebounce = setTimeout(functi
 
 // ---------- Tampilan ----------
 function gambarBulatan() {
-  var h = '';
+  var h = '', G = ST.gagal || {};
   for (var i = 0; i < ST.soal.length; i++) {
-    var c = 'b';
-    if (terisi(i)) c += (!perluFoto(i) || jmlFoto(i) > 0) ? ' isi' : ' warn';
+    var c = 'b', gl = G[i + '-0'] || G[i + '-1'], up = ST.up[i + '-0'] || ST.up[i + '-1'];
+    if (gl) c += ' gagal';
+    else if (terisi(i)) c += (!perluFoto(i) || jmlFotoAda(i) > 0) ? ' isi' : ' warn';
+    if (up) c += ' unggah';
     if (i === ST.idx) c += ' kini';
     h += '<button class="' + c + '" data-i="' + i + '">' + (i + 1) + '</button>';
   }
@@ -1572,12 +1592,17 @@ function gambarSoal() {
   $('sl-tabel').innerHTML = tb;
 }
 function gambarFoto() {
-  var i = ST.idx, h = '', n = 0;
+  var i = ST.idx, h = '', n = 0, G = ST.gagal || {};
   for (var sl = 0; sl < 2; sl++) {
-    var u = (ST.foto[i] || [])[sl], key = i + '-' + sl;
-    if (ST.up[key]) { h += '<div class="fto">Mengunggah...</div>'; n++; }
-    else if (u) {
-      h += '<div class="fto"><img data-zoom="' + sl + '" src="' + esc(ST.lokal[key] || u) + '" alt="Foto ' + (sl + 1) + '"><button class="hapus" data-hapus="' + sl + '">✕</button></div>'; n++;
+    var u = (ST.foto[i] || [])[sl], key = i + '-' + sl, lk = ST.lokal[key];
+    if (ST.up[key]) {
+      h += '<div class="fto">' + (lk ? '<img src="' + lk + '" alt="">' : '') + '<div class="fto-up">' + (lk ? 'Mengunggah...' : 'Memproses...') + '</div></div>'; n++;
+    } else if (G[key]) {
+      h += '<div class="fto"><img src="' + G[key].data + '" alt=""><div class="fto-gagal"><span>Gagal diunggah</span><button type="button" class="btn kecil" data-ulang="' + sl + '">Coba lagi</button></div><button class="hapus" data-buang="' + sl + '" aria-label="Buang foto">✕</button></div>'; n++;
+    } else if (u) {
+      h += '<div class="fto"><img data-zoom="' + sl + '" src="' + esc(lk || u) + '" alt="Foto ' + (sl + 1) + '">' +
+        (lk ? '<button class="putar" data-putar="' + sl + '" aria-label="Putar foto">↻</button>' : '') +
+        '<button class="hapus" data-hapus="' + sl + '">✕</button></div>'; n++;
     }
   }
   if (n < 2) h += '<button class="tambah-foto" id="sl-tambah">📷<br>Ambil / pilih foto</button>';
@@ -1586,7 +1611,7 @@ function gambarFoto() {
 }
 function render() {
   $('sl-judul').textContent = bankSkr().judul;
-  gambarBulatan(); gambarSoal(); gambarFoto();
+  gambarBulatan(); gambarSoal(); gambarFoto(); gambarAntri();
   $('sl-kartu-foto').style.display = perluFoto() ? '' : 'none';
   setGalat('sl-fgalat', '');
   $('sl-prev').disabled = ST.idx === 0;
@@ -1597,9 +1622,12 @@ function render() {
 
 // ---------- Navigasi dan kunci ----------
 function bolehPergi() {
-  var i = ST.idx;
-  if (Object.keys(ST.up).length) { toast('Tunggu foto selesai diunggah'); return false; }
-  if (perluFoto(i) && terisi(i) && jmlFoto(i) === 0) { info('Foto belum ada', 'Unggah foto pengerjaan dulu sebelum pindah.'); return false; }
+  var i = ST.idx, G = ST.gagal || {};
+  if (perluFoto(i) && terisi(i) && jmlFotoAda(i) === 0) {
+    if (G[i + '-0'] || G[i + '-1']) info('Foto gagal diunggah', 'Ketuk Coba lagi pada fotonya dulu sebelum pindah.');
+    else info('Foto belum ada', 'Unggah foto pengerjaan dulu sebelum pindah.');
+    return false;
+  }
   if (ST.kotor[i]) kirimDraf(i).then(function (ok) { if (!ok) toast('Gagal menyimpan, coba lagi'); });
   return true;
 }
@@ -1610,37 +1638,148 @@ function pindah(k) {
 }
 
 // ---------- Foto ----------
+// Foto dikecilkan lalu diunggah satu per satu di latar belakang. Murid boleh lanjut mengerjakan.
+function lukisKe(src, w, h, maks, mutu) {   // kecilkan; foto lebar otomatis diputar jadi tegak (portrait)
+  var sk = Math.min(1, maks / Math.max(w, h)), lw = Math.round(w * sk), lh = Math.round(h * sk);
+  var c = document.createElement('canvas');
+  if (lw > lh) {   // landscape: putar 90 derajat searah jarum jam
+    c.width = lh; c.height = lw;
+    var g = c.getContext('2d'); g.translate(lh, 0); g.rotate(Math.PI / 2); g.drawImage(src, 0, 0, lw, lh);
+  } else {
+    c.width = lw; c.height = lh; c.getContext('2d').drawImage(src, 0, 0, lw, lh);
+  }
+  return c.toDataURL('image/jpeg', mutu);
+}
 function kecilkan(file) {
+  var MAKS = 1000, MUTU = 0.72;
+  function lama() {   // cadangan untuk browser lama
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () { var d = lukisKe(img, img.width, img.height, MAKS, MUTU); URL.revokeObjectURL(url); res(d); };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(); };
+      img.src = url;
+    });
+  }
+  if (!window.createImageBitmap) return lama();
+  return createImageBitmap(file, { imageOrientation: 'from-image' }).then(function (bm) {
+    var d = lukisKe(bm, bm.width, bm.height, MAKS, MUTU); if (bm.close) bm.close(); return d;
+  }).catch(lama);
+}
+function putarData(data) {   // tombol putar: 90 derajat searah jarum jam
   return new Promise(function (res, rej) {
-    var url = URL.createObjectURL(file), img = new Image();
+    var img = new Image();
     img.onload = function () {
-      var sk = Math.min(1, 1024 / Math.max(img.width, img.height)), c = document.createElement('canvas');
-      c.width = Math.round(img.width * sk); c.height = Math.round(img.height * sk);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.8));
+      var c = document.createElement('canvas'); c.width = img.height; c.height = img.width;
+      var g = c.getContext('2d'); g.translate(img.height, 0); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0);
+      res(c.toDataURL('image/jpeg', 0.72));
     };
-    img.onerror = function () { URL.revokeObjectURL(url); rej(); };
-    img.src = url;
+    img.onerror = function () { rej(); };
+    img.src = data;
   });
 }
+
+var ANTRI = [], ANTRI_JALAN = false;
+function adaUnggah() { return Object.keys(ST.up || {}).length; }
+function soalGagal() {
+  var a = [];
+  Object.keys(ST.gagal || {}).forEach(function (k) { var n = Number(k.split('-')[0]) + 1; if (a.indexOf(n) < 0) a.push(n); });
+  return a.sort(function (x, y) { return x - y; });
+}
+function jmlFotoAda(i) {   // foto yang sudah terunggah ditambah yang sedang diunggah
+  var n = jmlFoto(i);
+  for (var k = 0; k < 2; k++) if (ST.up[i + '-' + k] && !(ST.foto[i] || [])[k]) n++;
+  return n;
+}
+function gambarAntri() {
+  var e = $('sl-antri'); if (!e) return;
+  var u = adaUnggah(), g = soalGagal();
+  e.textContent = g.length ? 'Foto soal ' + g.join(', ') + ' gagal diunggah. Buka soalnya, lalu ketuk Coba lagi.'
+    : (u ? 'Mengunggah ' + u + ' foto di latar belakang. Kamu boleh lanjut mengerjakan.' : '');
+  e.className = 'nl' + (g.length ? ' antri-gagal' : '');
+}
+function tungguAntrian(maks) {
+  return new Promise(function (res) {
+    var t0 = Date.now();
+    (function cek() { if (!adaUnggah() || Date.now() - t0 > maks) { res(); return; } setTimeout(cek, 300); })();
+  });
+}
+function antriFoto(it) { ANTRI.push(it); jalankanAntri(); }
+async function jalankanAntri() {
+  if (ANTRI_JALAN) return;
+  ANTRI_JALAN = true;
+  while (ANTRI.length) { await unggahItem(ANTRI.shift()); }
+  ANTRI_JALAN = false;
+}
+async function unggahItem(it) {
+  var st = it.st, r = null, jeda = [0, 2500, 6000];
+  try {
+    for (var c = 0; c < jeda.length; c++) {
+      if (jeda[c]) await tunggu(jeda[c]);
+      r = await api('unggahFoto', { materi: st.materi, soal: it.i + 1, nomor: it.sl + 1, data: it.data.split(',')[1], ganti: !!it.ganti });
+      if (r && r.ok) break;
+      if (r && !r.offline && !/^Terjadi kesalahan/.test(r.pesan || '')) break;   // ditolak server (bukan masalah sinyal): tidak diulang
+    }
+  } catch (e) { r = null; }
+  delete st.up[it.key];
+  if (r && r.ok) {
+    delete st.gagal[it.key];
+    st.foto[it.i][it.sl] = r.url; st.lokal[it.key] = it.data;
+    if (ST === st) { ubah(it.i); kirimDraf(it.i); }
+  } else if (it.ganti) {
+    st.lokal[it.key] = it.lama;
+    if (ST === st) toast('Foto gagal diputar. Coba lagi.');
+  } else {
+    st.gagal[it.key] = { data: it.data, pesan: (r && r.pesan) || 'Gagal mengunggah foto.' };
+  }
+  if (ST === st && S.hal === 'soal') { gambarFoto(); gambarBulatan(); gambarAntri(); }
+}
 async function tanganiFile(file) {
-  var i = ST.idx, f = ST.foto[i] = ST.foto[i] || [null, null], sl = -1;
-  for (var k = 0; k < 2; k++) if (!f[k] && !ST.up[i + '-' + k]) { sl = k; break; }
+  var st = ST, i = st.idx, f = st.foto[i] = st.foto[i] || [null, null], sl = -1;
+  for (var k = 0; k < 2; k++) if (!f[k] && !st.up[i + '-' + k] && !st.gagal[i + '-' + k]) { sl = k; break; }
   if (sl < 0) { toast('Maksimal 2 foto'); return; }
   var key = i + '-' + sl;
   setGalat('sl-fgalat', '');
+  st.up[key] = true; gambarFoto(); gambarBulatan(); gambarAntri();
   var data;
-  try { data = await kecilkan(file); } catch (e) { setGalat('sl-fgalat', 'Foto tidak bisa dibaca. Coba foto lain.'); return; }
-  ST.up[key] = true; gambarFoto();
-  var r = await api('unggahFoto', { materi: ST.materi, soal: i + 1, nomor: sl + 1, data: data.split(',')[1] });
-  delete ST.up[key];
-  if (r && r.ok) {
-    ST.foto[i][sl] = r.url; ST.lokal[key] = data; ubah(i); kirimDraf(i);
-  } else setGalat('sl-fgalat', (r && r.pesan) || 'Gagal mengunggah foto. Coba lagi.');
-  if (ST.idx === i) { gambarFoto(); gambarBulatan(); }
+  try { data = await kecilkan(file); }
+  catch (e) { delete st.up[key]; gambarFoto(); gambarBulatan(); gambarAntri(); setGalat('sl-fgalat', 'Foto tidak bisa dibaca. Coba foto lain.'); return; }
+  st.lokal[key] = data;
+  if (ST === st && ST.idx === i) gambarFoto();
+  antriFoto({ st: st, i: i, sl: sl, key: key, data: data });
+}
+function ulangFoto(sl) {
+  var i = ST.idx, key = i + '-' + sl, g = ST.gagal[key]; if (!g) return;
+  delete ST.gagal[key]; ST.up[key] = true; ST.lokal[key] = g.data;
+  gambarFoto(); gambarBulatan(); gambarAntri();
+  antriFoto({ st: ST, i: i, sl: sl, key: key, data: g.data });
+}
+function ulangSemuaGagal() {   // sinyal kembali: coba lagi semua foto yang gagal
+  if (!ST.gagal) return;
+  Object.keys(ST.gagal).forEach(function (key) {
+    var g = ST.gagal[key], p = key.split('-');
+    delete ST.gagal[key]; ST.up[key] = true; ST.lokal[key] = g.data;
+    antriFoto({ st: ST, i: Number(p[0]), sl: Number(p[1]), key: key, data: g.data });
+  });
+  if (S.hal === 'soal' && ST.soal.length) { gambarFoto(); gambarBulatan(); gambarAntri(); }
+}
+function buangFoto(sl) {
+  var key = ST.idx + '-' + sl; delete ST.gagal[key]; delete ST.lokal[key];
+  gambarFoto(); gambarBulatan(); gambarAntri();
+}
+async function putarFoto(sl) {
+  var st = ST, i = st.idx, key = i + '-' + sl, lama = st.lokal[key];
+  if (!lama || st.up[key]) return;
+  st.up[key] = true; gambarFoto(); gambarBulatan(); gambarAntri();
+  var baru;
+  try { baru = await putarData(lama); }
+  catch (e) { delete st.up[key]; gambarFoto(); gambarBulatan(); gambarAntri(); toast('Foto tidak bisa diputar'); return; }
+  st.lokal[key] = baru;
+  if (ST === st && ST.idx === i) gambarFoto();
+  antriFoto({ st: st, i: i, sl: sl, key: key, data: baru, ganti: true, lama: lama });
 }
 async function hapusFoto(sl) {
   var i = ST.idx;
+  if (ST.up[i + '-' + sl]) return;
   if (!(await tanya('Hapus foto ini?', '', 'Hapus', 'Batal'))) return;
   var r = await api('hapusFoto', { materi: ST.materi, soal: i + 1, nomor: sl + 1 });
   if (r && r.ok) { ST.foto[i][sl] = null; delete ST.lokal[i + '-' + sl]; ubah(i); kirimDraf(i); gambarFoto(); gambarBulatan(); }
@@ -1659,7 +1798,7 @@ async function mulaiSoal(id) {
   var m = S.murid || {}, pc = ((STATUS_MATERI[id] || bacaLokal('app_status', {})[id] || {}).percobaan) || 1;
   var idMurid = String(m.nama || '').toLowerCase() + '|' + (m.kelasSoal || m.kelas) + (pc > 1 ? '|r' + pc : '');
   if (ST.materi === id && ST.murid === idMurid && ST.soal.length) { ST.idx = Math.min(S.soalIdx || ST.idx, ST.soal.length - 1); render(); return; }
-  ST = { materi: id, pc: pc, murid: m.id || idMurid, soal: BANK_SOAL[id].buat(idMurid), jawab: [], foto: [], lokal: {}, waktu: [], ver: [], kotor: {}, up: {}, idx: 0 };
+  ST = { materi: id, pc: pc, murid: m.id || idMurid, soal: BANK_SOAL[id].buat(idMurid), jawab: [], foto: [], lokal: {}, waktu: [], ver: [], kotor: {}, up: {}, gagal: {}, idx: 0 };
   var lok = bacaLokal(kunciLokal(), null);
   ST.soal.forEach(function (s, i) {
     ST.jawab[i] = normal(s, lok && lok.jawab ? lok.jawab[i] : '');
@@ -1696,6 +1835,10 @@ PAGES.soal = {
 };
 
 INIT.push(function () {
+  if ($('sl-bul') && !$('sl-antri')) {   // baris status unggahan di bawah bulatan nomor soal
+    var da = document.createElement('div'); da.id = 'sl-antri'; da.className = 'nl';
+    $('sl-bul').parentNode.insertBefore(da, $('sl-bul').nextSibling);
+  }
   $('sl-prev').onclick = function () { pindah(ST.idx - 1); };
   $('sl-next').onclick = function () {
     if (ST.idx < ST.soal.length - 1) { pindah(ST.idx + 1); return; }
@@ -1718,6 +1861,9 @@ INIT.push(function () {
   });
   $('sl-foto').addEventListener('click', function (e) {
     var h = e.target.closest('[data-hapus]'); if (h) { hapusFoto(Number(h.dataset.hapus)); return; }
+    var ul = e.target.closest('[data-ulang]'); if (ul) { ulangFoto(Number(ul.dataset.ulang)); return; }
+    var bu = e.target.closest('[data-buang]'); if (bu) { buangFoto(Number(bu.dataset.buang)); return; }
+    var pu = e.target.closest('[data-putar]'); if (pu) { putarFoto(Number(pu.dataset.putar)); return; }
     var z = e.target.closest('[data-zoom]'); if (z) zoomFoto(z.src);
   });
   $('sl-file').addEventListener('change', function () {
@@ -1727,7 +1873,7 @@ INIT.push(function () {
   $('sl-file').addEventListener('cancel', function () { ujianFotoSelesai(); });
   // Coba ulang simpan otomatis bila sinyal sempat putus
   setInterval(function () { if (S.hal === 'soal' && Object.keys(ST.kotor).length) flushDraf(); }, 15000);
-  window.addEventListener('online', function () { if (Object.keys(ST.kotor).length) flushDraf(); });
+  window.addEventListener('online', function () { if (Object.keys(ST.kotor).length) flushDraf(); ulangSemuaGagal(); });
 });
 
 
@@ -1745,11 +1891,13 @@ function statusLokal(id) { return (bacaLokal('app_status', {})[id] || {}).status
 function gambarRingkasan() {
   var h = '', kosong = 0;
   for (var i = 0; i < ST.soal.length; i++) {
-    var t = terisi(i), f = jmlFoto(i);
+    var t = terisi(i), f = jmlFotoAda(i), pend = ST.up[i + '-0'] || ST.up[i + '-1'], gl = ST.gagal[i + '-0'] || ST.gagal[i + '-1'];
     if (!t) kosong++;
     var ket = !t ? '<span class="kosong">Kosong</span>'
       : (!perluFoto(i) ? '<span class="ok">✓ Terisi</span>'
-      : (f > 0 ? '<span class="ok">✓ Terisi · ' + f + ' foto</span>' : '<span class="warn">Foto belum ada</span>'));
+      : (gl ? '<span class="warn">Foto gagal diunggah</span>'
+      : (pend ? '<span class="warn">Foto sedang diunggah</span>'
+      : (f > 0 ? '<span class="ok">✓ Terisi · ' + f + ' foto</span>' : '<span class="warn">Foto belum ada</span>'))));
     h += '<button class="ring-item" data-i="' + i + '"><span>Soal ' + (i + 1) + '</span>' + ket + '</button>';
   }
   $('sx-ring').innerHTML = h;
@@ -1795,13 +1943,22 @@ function suksesKirim(id) {
   if (typeof STATUS_MATERI !== 'undefined') STATUS_MATERI[id] = { status: 'menunggu' };
   clearTimeout(tDebounce);
   hapusLokal(kunciLokal());
-  ST = { materi: '', murid: '', soal: [], jawab: [], foto: [], lokal: {}, waktu: [], ver: [], kotor: {}, up: {}, idx: 0 };
+  ST = { materi: '', murid: '', soal: [], jawab: [], foto: [], lokal: {}, waktu: [], ver: [], kotor: {}, up: {}, gagal: {}, idx: 0 };
   S.soalIdx = 0; simpan();
   tampilKirim('sukses');
 }
 async function jalankanKirim(id) {
   KR.jalan = true; KR.ok = false;
   tampilKirim('proses'); setP(0);
+
+  if (adaUnggah()) {   // foto masih diunggah di latar belakang: tunggu sampai selesai
+    naik(30);
+    var t0 = Date.now();
+    while (adaUnggah() && Date.now() - t0 < 180000) { tahap('Menunggu ' + adaUnggah() + ' foto selesai diunggah...'); await tunggu(500); }
+    if (adaUnggah()) { gagalKirim('Foto masih diunggah. Tunggu sebentar lalu coba lagi.'); return; }
+  }
+  var gl = soalGagal();
+  if (gl.length) { gagalKirim('Foto soal nomor ' + gl.join(', ') + ' gagal diunggah. Kembali ke soal lalu ketuk Coba lagi.'); return; }
 
   tahap('Menyimpan jawaban...'); naik(35);
   var ok = await flushDraf();
@@ -1853,11 +2010,14 @@ INIT.push(function () {
     var id = ST.materi, bad = [], kosong = 0;
     for (var i = 0; i < ST.soal.length; i++) {
       if (!terisi(i)) kosong++;
-      else if (perluFoto(i) && jmlFoto(i) === 0) bad.push(i + 1);
+      else if (perluFoto(i) && jmlFotoAda(i) === 0) bad.push(i + 1);
     }
+    var gg = soalGagal();
+    if (gg.length) { info('Foto gagal diunggah', 'Foto soal nomor ' + gg.join(', ') + ' belum terunggah. Buka soalnya lalu ketuk Coba lagi.'); return; }
     if (bad.length) { info('Foto belum ada', 'Soal nomor ' + bad.join(', ') + ' belum ada foto pengerjaan.'); return; }
     var isi = 'Setelah dikirim, jawaban tidak bisa diubah.' +
-      (kosong ? '\n\n' + kosong + ' soal masih kosong (nilainya nol).' : '');
+      (kosong ? '\n\n' + kosong + ' soal masih kosong (nilainya nol).' : '') +
+      (adaUnggah() ? '\n\n' + adaUnggah() + ' foto masih diunggah. Pengiriman menunggu sampai selesai.' : '');
     if (!(await tanya('Yakin kirim?', isi, 'Ya, kirim', 'Batal'))) return;
     KR.mulai = true; go('kirim', id);
   };
@@ -1865,6 +2025,105 @@ INIT.push(function () {
   $('kr-soal').onclick = function () { go('soal', { materi: ST.materi, idx: S.soalIdx || 0 }); };
   $('kr-materi').onclick = function () { if (MODE_UJIAN) keluar(); else go('materi'); };   // tablet ujian: setelah kirim, kembali ke halaman masuk untuk murid berikutnya
   if (MODE_UJIAN) $('kr-materi').textContent = 'Selesai';
+});
+
+
+// ===================== HALAMAN HASIL (MURID) =====================
+var HS = { id: '', data: null, p: 0 };
+
+function gambarHasil() {
+  var r = HS.data, id = HS.id, B = BANK_SOAL[id], m = S.murid || {};
+  var daftar = r.percobaan, pc = daftar[HS.p], terbaru = HS.p === daftar.length - 1;
+  var tb = '';
+  if (daftar.length > 1) daftar.forEach(function (x, k) {
+    tb += '<button type="button" class="hs-tab-b' + (k === HS.p ? ' aktif' : '') + '" data-p="' + k + '">Percobaan ' + x.p + '</button>';
+  });
+  $('hs-tab').innerHTML = tb;
+
+  var idSoal = String(m.nama).toLowerCase() + '|' + (m.kelasSoal || m.kelas) + (pc.p > 1 ? '|r' + pc.p : '');
+  var soal = B.buat(idSoal), maks = B.skorPerSoal || 10, benar = 0, kartu = '', peta = {};
+  (pc.soal || []).forEach(function (x) { peta[Number(x.no)] = x; });
+  soal.forEach(function (s, i) {
+    var d = peta[i + 1] || { jawaban: '', benar: null, foto: [], nilaiSoal: '' }, b = d.benar;
+    if (b === true) benar++;
+    var badge = b === true ? '<span class="hs-badge ya">✓ Benar</span>' : (b === false ? '<span class="hs-badge tdk">✗ Salah</span>' : '<span class="hs-badge kos">Kosong</span>');
+    var poin = String(d.nilaiSoal == null ? '' : d.nilaiSoal);
+    var tampil = Array.isArray(s.tampil) ? s.tampil.join('  ') : s.tampil;
+    var jw = jwbTeks(d.jawaban);
+    var foto = (d.foto || []).filter(Boolean).map(function (u) { return '<img data-zoom="1" src="' + esc(u) + '" alt="Foto pengerjaan">'; }).join('');
+    var perluF = !(B.perluFoto === false || (B.perluFotoSoal && !B.perluFotoSoal(s)));
+    kartu += '<div class="kartu hs-soal"><div class="hs-soal-atas"><b>Soal ' + (i + 1) + '</b><span>' +
+      (poin !== '' ? '<small>' + esc(poin) + ' / ' + maks + ' poin</small>' : '') + badge + '</span></div>' +
+      '<p class="hs-teks">' + esc(s.teks) + '</p>' +
+      (tampil ? '<div class="jwb"><small>Soal</small>' + esc(tampil) + '</div>' : '') +
+      '<div class="hs-banding">' +
+        '<div class="jwb ' + (b === false ? 'salah' : (b === true ? 'benar' : '')) + '"><small>Jawabanmu</small>' + (jw === '' ? '<i>kosong</i>' : esc(jw)) + '</div>' +
+        '<div class="jwb kunci"><small>Kunci jawaban</small>' + esc(jwbTeks(s.kunci)) + '</div>' +
+      '</div>' +
+      '<details open class="hs-lk"><summary>Jalan pengerjaan</summary>' + htmlLangkah(s.langkah) + '</details>' +
+      (foto ? '<div class="hs-foto-judul">Fotomu</div><div class="mini-foto">' + foto + '</div>' : (perluF ? '<div class="nl">Tidak ada foto</div>' : '')) +
+      '</div>';
+  });
+
+  var h = '<div class="kartu hs-nilai"><div><small>Nilai akhir</small><b>' + esc(pc.nilai) + '</b></div>' +
+    '<div class="hs-ket">Benar ' + benar + ' dari ' + soal.length + '<br>Percobaan ke-' + pc.p + (terbaru && daftar.length > 1 ? ' (terbaru)' : '') + '</div></div>';
+  if (terbaru) {
+    h += r.diminta
+      ? '<div class="hs-menunggu">Permintaan remedi menunggu persetujuan guru.</div>'
+      : '<button type="button" id="hs-remedi" class="btn sekunder" style="margin:0 0 14px">Minta remedi</button>';
+  }
+  if (pc.catatan) h += '<div class="hs-catatan"><b>📝 Catatan guru</b><p>' + esc(pc.catatan) + '</p></div>';
+  $('hs-isi').innerHTML = h + kartu;
+}
+
+async function hasilMuat() {
+  var id = HS.id;
+  $('hs-isi').innerHTML = '<div class="kartu tengah">Memuat hasil...</div>';
+  $('hs-tab').innerHTML = '';
+  var r = await api('hasilMurid', { materi: id });
+  if (S.hal !== 'hasil' || HS.id !== id) return;
+  if (!(r && r.ok)) {
+    $('hs-isi').innerHTML = '<div class="kartu tengah">' + esc((r && r.pesan) || 'Gagal memuat hasil.') + '</div><button type="button" id="hs-ulang" class="btn">Coba lagi</button>';
+    return;
+  }
+  HS.data = r; HS.p = r.percobaan.length - 1;
+  gambarHasil();
+}
+PAGES.hasil = {
+  buka: function (param) {
+    var id = idMateri(param) || HS.id;
+    if (!$('hs-isi') || !id || id === 'ujian' || !BANK_SOAL[id]) { go('materi'); return; }
+    HS.id = id; HS.data = null;
+    var mt = MATERI.filter(function (x) { return x.id === id; })[0] || { judul: id };
+    var m = S.murid || {};
+    $('hs-materi').textContent = 'Hasil ' + mt.judul;
+    $('hs-nama').textContent = (m.nama || '') + ' · Kelas ' + (m.kelas || '');
+    hasilMuat();
+  }
+};
+async function hasilMintaRemedi() {
+  if (!(await tanya('Minta remedi?', 'Permintaanmu dikirim ke guru. Kalau disetujui, kamu mengerjakan soal baru.', 'Kirim permintaan', 'Batal'))) return;
+  var rm = await api('mintaRemedi', { materi: HS.id });
+  if (rm && rm.ok) {
+    if (HS.data) HS.data.diminta = true;
+    var st = STATUS_MATERI[HS.id] || { status: 'nilai' }; st.diminta = true; STATUS_MATERI[HS.id] = st;
+    simpanLokal('app_status', STATUS_MATERI);
+    if (S.hal === 'hasil' && HS.data) gambarHasil();
+    toast('Permintaan remedi dikirim ke guru');
+  } else info('Gagal meminta remedi', (rm && rm.pesan) || 'Coba lagi.');
+}
+INIT.push(function () {
+  if (!$('h-hasil')) return;   // halaman ini tidak punya layar hasil (ujian, guru)
+  $('hs-kembali').onclick = function () { go('materi'); };
+  $('hs-tab').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-p]'); if (!b || !HS.data) return;
+    HS.p = Number(b.dataset.p); gambarHasil(); window.scrollTo(0, 0);
+  });
+  $('hs-isi').addEventListener('click', function (e) {
+    if (e.target.closest('#hs-remedi')) { hasilMintaRemedi(); return; }
+    if (e.target.closest('#hs-ulang')) { hasilMuat(); return; }
+    var im = e.target.closest('img[data-zoom]'); if (im) zoomFoto(im.src);
+  });
 });
 
 
@@ -2277,6 +2536,20 @@ INIT.push(function () {
 // ===================== PENILAIAN =====================
 var GN = { id: '', materi: '', antrian: [], pos: 0, baru: false, dirty: false, tersimpan: false, ok: 0 };
 
+// Langkah pengerjaan: gaya baru (ke bawah, tanpa nomor) bila ada baris judul berawalan "## "; selain itu daftar bernomor
+function htmlLangkah(lk) {
+  lk = lk || [];
+  var baru = lk.some(function (x) { return String(x).indexOf('## ') === 0; });
+  if (!baru) return '<ol class="langkah">' + lk.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol>';
+  return '<div class="langkah-bawah">' + lk.map(function (x) {
+    x = String(x);
+    if (x.indexOf('## ') === 0) return '<div class="lk-judul">' + esc(x.slice(3)) + '</div>';
+    var tebal = (x.indexOf('Jumlahkan') === 0 || x.indexOf('Kode ') === 0) ? ' lk-total' : '';
+    return '<div class="lk-baris' + tebal + '">' + esc(x) + '</div>';
+  }).join('') + '</div>';
+}
+function hitungCatatan() { var e = $('gn-catatan'); if (e) $('gn-hitung').textContent = e.value.length + '/300'; }
+
 function jwbTeks(x) { return Array.isArray(x) ? x.join(', ') : String(x == null ? '' : x); }
 function gambarNilaiSoal(r) {
   var m = r.murid, idSoal = String(m.nama).toLowerCase() + '|' + (m.kelasSoal || m.kelas);
@@ -2297,7 +2570,7 @@ function gambarNilaiSoal(r) {
       '<div class="mini-foto">' + (foto || (BANK_SOAL[GN.materi].perluFoto === false || (BANK_SOAL[GN.materi].perluFotoSoal && !BANK_SOAL[GN.materi].perluFotoSoal(s)) ? '' : '<span style="color:var(--abu);font-size:14px">Tidak ada foto</span>')) + '</div>' +
       '<div class="pilih-nilai"><button type="button" class="pn salah" data-v="0">Salah (0)</button><button type="button" class="pn sebagian" data-v="' + (skorMax() / 2) + '">Benar sebagian (' + (skorMax() / 2) + ')</button><button type="button" class="pn benar" data-v="' + skorMax() + '">Benar (' + skorMax() + ')</button></div>' +
       '<div class="ns-baris"><input class="isian ns" data-i="' + i + '" type="text" inputmode="numeric" maxlength="' + String(skorMax()).length + '" autocomplete="off" placeholder="Nilai 0-' + skorMax() + '" value="' + esc(String(nilaiAwal(d, s, b, r))) + '"></div>' +
-      '<details><summary>Langkah pengerjaan</summary><ol class="langkah">' + s.langkah.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ol></details></div>';
+      '<details><summary>Langkah pengerjaan</summary>' + htmlLangkah(s.langkah) + '</details></div>';
   });
   GN.ok = benarSemua;
   $('gn-soal').innerHTML = h;
@@ -2353,7 +2626,7 @@ async function simpanNilai() {
   var ns = [].map.call(document.querySelectorAll('#gn-soal .ns'), function (e) { return e.value.trim(); });
   setGalat('gn-galat', '');
   var b = $('gn-simpan'); sibuk(b, true, 'Menyimpan...');
-  var r = await api('guruSimpanNilai', { id: GN.id, materi: GN.materi, nilai: Number(v), soal: ns });
+  var r = await api('guruSimpanNilai', { id: GN.id, materi: GN.materi, nilai: Number(v), soal: ns, catatan: $('gn-catatan') ? $('gn-catatan').value.trim() : undefined });
   sibuk(b, false);
   if (r && r.ok) {
     GN.dirty = false; GN.tersimpan = true; ubahStatusLokal('dinilai'); gambarStatusNilai();
@@ -2378,12 +2651,14 @@ PAGES.guruNilai = {
     GN.pos = idx; GN.dirty = false; GN.tersimpan = false;
     $('gn-nama').textContent = 'Memuat...'; $('gn-kelas').textContent = ''; $('gn-soal').innerHTML = '';
     $('gn-nilai').value = ''; $('gn-auto').textContent = ''; setGalat('gn-galat', '');
+    if ($('gn-catatan')) { $('gn-catatan').value = ''; hitungCatatan(); }
     gambarPos(); gambarStatusNilai();
     var r = await api('guruDetail', { id: GN.id, materi: GN.materi });
     if (!(r && r.ok)) { $('gn-nama').textContent = 'Gagal memuat'; toast((r && r.pesan) || 'Gagal memuat data murid'); return; }
     $('gn-nama').textContent = r.murid.nama;
     $('gn-kelas').textContent = 'Kelas ' + r.murid.kelas + ' · ' + (r.nilai !== '' && r.nilai != null ? 'Sudah dinilai' : 'Belum dinilai') + (r.percobaan > 1 ? ' · Remedi ke-' + (r.percobaan - 1) : '');
     gambarNilaiSoal(r);
+    if ($('gn-catatan')) { $('gn-catatan').value = r.catatan || ''; hitungCatatan(); }
     $('gn-bukaulang').style.display = GN.materi === 'ujian' ? '' : 'none';
     if (r.nilai != null && r.nilai !== '') {
       var adaSoal = (r.soal || []).some(function (x) { return String(x.nilaiSoal == null ? '' : x.nilaiSoal) !== ''; });
@@ -2395,6 +2670,7 @@ PAGES.guruNilai = {
 };
 INIT.push(function () {
   $('gn-simpan').onclick = function () { simpanNilai(); };
+  if ($('gn-catatan')) $('gn-catatan').addEventListener('input', function () { GN.dirty = true; hitungCatatan(); gambarStatusNilai(); });
   $('gn-soal').addEventListener('input', function (e) {
     var i = e.target; if (!i.classList.contains('ns')) return;
     var v = i.value.replace(/[^0-9]/g, ''); if (v !== '' && Number(v) > skorMax()) v = String(skorMax());
@@ -2465,6 +2741,7 @@ async function ujianKirimOtomatis(alasan) {
   ov.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);color:#fff;display:flex;align-items:center;justify-content:center;font:600 18px system-ui,sans-serif;text-align:center;padding:24px';
   ov.textContent = (alasan === 'waktu' ? 'Waktu habis.' : 'Pelanggaran melebihi batas.') + ' Mengirim jawaban...';
   document.body.appendChild(ov);
+  try { await tungguAntrian(25000); } catch (x) {}   // beri waktu foto yang masih diunggah
   try { await flushDraf(); } catch (x) {}
   var r = null;
   for (var k = 0; k < 40; k++) {

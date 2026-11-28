@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest-portal.webmanifest">
 <link rel="icon" href="icon-portal-192.png">
 <link rel="apple-touch-icon" href="icon-portal-192.png">
-<link rel="stylesheet" href="style.css?v=Reg04">
+<link rel="stylesheet" href="style.css?v=Reg05">
 <script>
 /* Link ujian (?ujian): pintasan yang dipasang memakai manifest ujian, bukan portal */
 if (/ujian/i.test(location.search)) {
@@ -111,6 +111,16 @@ if (/ujian/i.test(location.search)) {
     <div id="mt-daftar"></div>
   </div>
 </div>
+<div id="h-hasil" class="halaman">
+  <div class="wadah">
+    <div class="hs-atas">
+      <button id="hs-kembali" type="button" class="btn sekunder kecil">← Materi</button>
+      <div class="hs-judul"><b id="hs-materi"></b><small id="hs-nama"></small></div>
+    </div>
+    <div id="hs-tab" class="hs-tab"></div>
+    <div id="hs-isi"></div>
+  </div>
+</div>
 <style>
 .vt-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .vt-kotak{min-height:58px;padding:8px 4px;border:1.5px solid var(--garis);border-radius:12px;background:#fff;color:var(--teks);font-family:inherit;font-size:12px;line-height:1.25;font-weight:600;text-align:center;cursor:pointer;word-break:break-word}
@@ -169,10 +179,10 @@ body[data-hal="voting"] .versi{bottom:calc(80px + env(safe-area-inset-bottom))}
 .baris .bin,.baris .huruf{flex:1;font-size:22px;font-weight:700;letter-spacing:2px;color:var(--utama)}
 .baris .isian{flex:1.2;text-align:center;font-size:20px;font-weight:700;letter-spacing:2px}
 .foto-grid{display:flex;gap:10px;flex-wrap:wrap}
-.fto{position:relative;width:calc(50% - 5px);aspect-ratio:1;border-radius:12px;overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--abu);text-align:center}
-.fto img{width:100%;height:100%;object-fit:cover}
+.fto{position:relative;width:calc(50% - 5px);aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--abu);text-align:center}
+.fto img{width:100%;height:100%;object-fit:contain;background:#e2e8f0}
 .fto .hapus{position:absolute;top:6px;right:6px;width:32px;height:32px;border-radius:50%;border:0;background:rgba(15,23,42,.75);color:#fff;font-size:15px;cursor:pointer}
-.tambah-foto{width:calc(50% - 5px);aspect-ratio:1;border:2px dashed var(--utama);border-radius:12px;background:var(--utama-muda);color:var(--utama-gelap);font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;padding:6px}
+.tambah-foto{width:calc(50% - 5px);aspect-ratio:3/4;border:2px dashed var(--utama);border-radius:12px;background:var(--utama-muda);color:var(--utama-gelap);font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;padding:6px}
 .nav-bawah{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;box-shadow:0 -2px 8px rgba(15,23,42,.1);padding-bottom:env(safe-area-inset-bottom)}
 .nav-bawah .in{max-width:480px;margin:0 auto;padding:10px 16px;display:flex;gap:10px}
 .nav-bawah .btn{margin-top:0;flex:1}
@@ -457,7 +467,7 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
 .jwb{margin:6px 0;padding:8px 10px;background:var(--bg);border-radius:10px;font-size:15px;word-break:break-word}
 .jwb small{display:block;color:var(--abu);font-size:12px}
 .mini-foto{display:flex;gap:8px;margin-top:8px}
-.mini-foto img{width:calc(50% - 4px);aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer}
+.mini-foto img{width:calc(50% - 4px);aspect-ratio:3/4;object-fit:contain;background:#e2e8f0;border-radius:10px;cursor:pointer}
 .langkah{margin:6px 0 0;padding-left:20px;font-size:14px;color:#334155}
 </style>
 <div id="h-guruTugas" class="halaman">
@@ -524,6 +534,9 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
       <b id="gn-auto"></b>
       <label for="gn-nilai">Nilai akhir (total otomatis)</label>
       <input id="gn-nilai" class="isian" type="text" readonly maxlength="3" autocomplete="off">
+      <label for="gn-catatan">Catatan untuk murid (boleh kosong)</label>
+      <textarea id="gn-catatan" class="isian" rows="3" maxlength="300" style="resize:none;min-height:84px" placeholder="Contoh: Soal 2 salah karena sisa bagi dibaca dari atas. Baca dari bawah."></textarea>
+      <div id="gn-hitung" class="hitung">0/300</div>
       <div id="gn-galat" class="galat"></div>
       <button id="gn-simpan" class="btn">Simpan nilai</button>
     </div>
@@ -544,6 +557,6 @@ body.guru .wadah{padding-top:max(54px,calc(env(safe-area-inset-top) + 46px))}
 
 <!-- ===================== BANK SOAL (tempel isi file apa adanya) ===================== -->
 <script>window.MODE = /ujian/i.test(location.search) ? 'ujian' : 'portal';</script>
-<script src="app.js?v=Reg04"></script>
+<script src="app.js?v=Reg05"></script>
 </body>
 </html>
